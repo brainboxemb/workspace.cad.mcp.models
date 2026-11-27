@@ -58,6 +58,12 @@ procedure unless this consumer has a proven local reason to differ.
 If commands or file layout change, update this developer manual and the plan in
 the same issue.
 
+The first CAD checkout is intentionally lightweight: bootstrap clones only the
+configured development branch and uses a blobless partial clone. This prevents
+large generated or historical blobs from unrelated refs from being transferred
+during initial setup. After the checkout exists, workspace maintenance only
+validates its origin and never changes its branch or worktree state.
+
 ### 4. Run CI
 
 Open the PR to `dev` and wait for the central `ci` check. Do not merge while
