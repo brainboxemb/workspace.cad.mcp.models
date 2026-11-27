@@ -115,7 +115,9 @@ On the first run the script:
 5. runs `vcs import --input dependencies.repos ext` in the same environment;
 6. materializes exact MCP and Forge checkouts under `ext/mcp` and
    `ext/forge`;
-7. clones the configured CAD repository to `.repos/cad` when absent;
+7. clones only the configured CAD development branch to `.repos/cad` when
+   absent, using a blobless partial clone so historical file contents are only
+   fetched if Git later needs them;
 8. installs Forge CAD MCP and SCPF into `cad-mcp-workspace`.
 
 The two Conda levels are therefore:
