@@ -4,5 +4,5 @@ solidcraft:
   # Absolute path or command visible inside the Conda environment.
   cli: C:\\absolute\\path\\to\\solidcraft-cli.exe
 
-# The active target is added later by scripts/create-model.ps1 or
-# scripts/select-model.ps1.
+# The active target is added later by scripts/create-workbench.ps1,
+# scripts/create-model.ps1 or scripts/select-model.ps1.
