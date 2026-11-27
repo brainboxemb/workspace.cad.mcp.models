@@ -19,8 +19,14 @@ This creates:
 
 ~~~text
 .workbench/mcp-test/
-└── project.yml
+├── project.yml
+└── .codex/
+    └── config.toml
 ~~~
+
+The `.codex/config.toml` file binds the Codex IDE extension directly to the
+same Forge CAD MCP stdio command used by the workspace. A separately installed
+global `codex` CLI is not required for the normal VS Code workbench flow.
 
 and writes the local target to `workspace.local.yml`.
 
@@ -85,7 +91,15 @@ Open:
 .generated/forge-cad.code-workspace
 ~~~
 
-The only project folder is the selected local workbench.
+The only project folder is the selected local workbench. The generated
+workspace also selects the same Python executable from the `cad-mcp-workspace`
+Conda environment that runs the MCP server, so editor analysis and MCP use the
+same installed Forge/SCPF package.
+
+For Codex, trust the local workbench project when prompted and reload or reopen
+the VS Code window after `.codex/config.toml` is first generated or changed.
+Codex then starts `forgeCad` from that project-local configuration; there is no
+separate `codex mcp add` step.
 
 ## 5. Start the MCP workflow
 
