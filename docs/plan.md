@@ -12,8 +12,10 @@ catalog repository.
 
 - permanent source lanes are `main` and `dev`;
 - normal source integration uses the repository-local `/merge` policy;
-- MCP and Forge are exact externals declared in `dependencies.repos` and
-  materialized with vcs2l under `ext/`;
+- MCP and Forge are exact released externals declared in `dependencies.repos`
+  and materialized with vcs2l under `ext/`;
+- the accepted toolchain pins are Forge CAD MCP `v0.0.2` and Forge
+  `v0.25.0`;
 - one dedicated `cad-mcp-workspace` Conda environment contains vcs2l and the
   Forge MCP/runtime dependencies;
 - the CAD catalog is configured as
@@ -36,7 +38,7 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 ## Engineering constraints
 
 - reuse vcs2l for external repository materialization;
-- keep MCP/Forge revisions exact and committed;
+- keep MCP/Forge release tags exact and committed;
 - keep the active CAD worktree independent from external dependency state;
 - keep model target selection explicit/local;
 - keep normal VS Code context limited to the exact target owner;
@@ -67,6 +69,8 @@ State:
 
 ## Recently completed
 
+- #24 adopts the released MCP `v0.0.2` + Forge `v0.25.0` compatibility
+  baseline from the workspace template, replacing opaque commit-SHA pins.
 - #21 synchronized the template PR helper. `scripts/pr.ps1` can publish either
   the workspace repository or `.repos/cad`, wait for PR checks and request the
   existing repository-policy merge with `/merge`.
