@@ -58,22 +58,48 @@ procedure unless this consumer has a proven local reason to differ.
 If commands or file layout change, update this developer manual and the plan in
 the same issue.
 
-### 4. Run CI
+The first CAD checkout is intentionally lightweight: bootstrap clones only the
+configured development branch and uses a blobless partial clone. This prevents
+large generated or historical blobs from unrelated refs from being transferred
+during initial setup. After the checkout exists, workspace maintenance only
+validates its origin and never changes its branch or worktree state.
 
-Open the PR to `dev` and wait for the central `ci` check. Do not merge while
-CI is red.
+### 4. Publish through the repository policy
 
-### 5. Integrate with /merge
+Install and authenticate GitHub CLI once:
 
-When CI is green, comment `/merge` on the PR. The repository merge policy
-selects the integration method.
+~~~powershell
+gh --version
+gh auth status
+~~~
 
-### 6. Update the plan
+If needed, install GitHub CLI and run `gh auth login`.
+
+After the issue-branch changes are committed, the workspace helper can push the
+branch, open the PR, wait for the central checks and request the existing merge
+policy:
+
+~~~powershell
+.\scripts\pr.ps1 publish -Title "Describe the workspace change"
+~~~
+
+The helper posts `/merge`; it never performs a direct GitHub merge. The
+repository merge-policy workflow remains authoritative.
+
+The same helper can publish model work from the active CAD repository:
+
+~~~powershell
+.\scripts\pr.ps1 publish -Path .repos\cad -Title "Describe the model change"
+~~~
+
+The steps can also be separated with `pr.ps1 open` and `pr.ps1 merge`.
+
+### 5. Update the plan
 
 After merge, remove the completed workstream from active work in
 `docs/plan.md` and leave only a short recently-completed note when useful.
 
-### 7. Publish the accepted dev checkpoint
+### 6. Publish the accepted dev checkpoint
 
 Create a `dev -> main` PR and use `/merge` again. Do not manually choose
 merge, squash or rebase.

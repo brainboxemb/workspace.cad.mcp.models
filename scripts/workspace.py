@@ -131,7 +131,16 @@ def ensure_cad(data: dict, path: Path) -> None:
         raise WorkspaceError("repositories.cad.branch is required")
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
-        run(["git", "clone", "--branch", branch, url, str(path)])
+        run([
+            "git",
+            "clone",
+            "--single-branch",
+            "--filter=blob:none",
+            "--branch",
+            branch,
+            url,
+            str(path),
+        ])
     require_repo(path, url)
     # Never switch, pull, clean or reset an existing CAD worktree.
 

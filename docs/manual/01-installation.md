@@ -17,6 +17,18 @@ git --version
 If Git is not available, install Git for Windows first, open a new PowerShell
 window and repeat the command.
 
+If you want the workspace to open and merge GitHub pull requests for you, also
+check GitHub CLI:
+
+~~~powershell
+gh --version
+gh auth status
+~~~
+
+If `gh` is missing, install GitHub CLI. If it is not authenticated, run
+`gh auth login`. The workspace PR helper uses that existing authentication and
+does not store a separate GitHub token.
+
 ## 2. Install Conda
 
 Check whether Conda is already available:
@@ -115,7 +127,9 @@ On the first run the script:
 5. runs `vcs import --input dependencies.repos ext` in the same environment;
 6. materializes exact MCP and Forge checkouts under `ext/mcp` and
    `ext/forge`;
-7. clones the configured CAD repository to `.repos/cad` when absent;
+7. clones only the configured CAD development branch to `.repos/cad` when
+   absent, using a blobless partial clone so historical file contents are only
+   fetched if Git later needs them;
 8. installs Forge CAD MCP and SCPF into `cad-mcp-workspace`.
 
 The two Conda levels are therefore:

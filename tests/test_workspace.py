@@ -85,6 +85,32 @@ def test_missing_vcs2l_external_checkout_is_reported(monkeypatch, tmp_path):
         workspace.require_external_toolchain(paths)
 
 
+def test_initial_cad_checkout_is_single_branch_blobless(monkeypatch, tmp_path):
+    data = base_config()
+    cad = tmp_path / "cad"
+    calls = []
+
+    monkeypatch.setattr(
+        workspace,
+        "run",
+        lambda args, **kwargs: calls.append(args) or "",
+    )
+    monkeypatch.setattr(workspace, "require_repo", lambda path, url: None)
+
+    workspace.ensure_cad(data, cad)
+
+    assert calls == [[
+        "git",
+        "clone",
+        "--single-branch",
+        "--filter=blob:none",
+        "--branch",
+        "dev",
+        data["repositories"]["cad"]["url"],
+        str(cad),
+    ]]
+
+
 def test_existing_cad_checkout_is_only_validated(monkeypatch, tmp_path):
     data = base_config()
     cad = tmp_path / "cad"
@@ -252,3 +278,12 @@ def test_local_machine_config_may_exist_without_target():
             "target": {"model": "models/basic/part"},
         }
     )
+
+
+def test_pr_helper_uses_repository_merge_policy():
+    script = (
+        Path(__file__).resolve().parents[1] / "scripts" / "pr.ps1"
+    ).read_text(encoding="utf-8")
+    assert '"pr", "checks", "$PrNumber", "--watch", "--fail-fast"' in script
+    assert '"pr", "comment", "$PrNumber", "--body", "/merge"' in script
+    assert '"pr", "merge"' not in script

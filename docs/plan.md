@@ -67,6 +67,11 @@ State:
 
 ## Recently completed
 
+- #21 synchronized the template PR helper. `scripts/pr.ps1` can publish either
+  the workspace repository or `.repos/cad`, wait for PR checks and request the
+  existing repository-policy merge with `/merge`.
+- #19 synchronized the lightweight initial CAD checkout: only the configured
+  development branch is cloned and historical blobs are fetched lazily.
 - #12 synchronized the target-optional installation, new-model owner creation,
   immutable SolidCraft reference import and ordered model workflows from the
   workspace template.

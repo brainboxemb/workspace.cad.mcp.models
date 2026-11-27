@@ -95,6 +95,18 @@ git -C .repos/cad status
 
 Intended source changes are normally model.yml, ci.yml and scpf/model.py. Owner-local build/ must remain ignored.
 
+## 8. Publish the CAD change
+
+After the maintained CAD changes are committed on the issue branch, the
+workspace can open the CAD PR and request the normal repository-policy merge:
+
+~~~powershell
+.\scripts\pr.ps1 publish -Path .repos\cad -Title "<PR title>"
+~~~
+
+This waits for PR checks and then posts `/merge`; it does not merge around the
+repository policy.
+
 ## Acceptance
 
 Accepted when a fresh owner can be created, the AI authors Forge source without manual Python editing, replay/checking succeeds, and Git contains only maintained source rather than MCP scratch.
