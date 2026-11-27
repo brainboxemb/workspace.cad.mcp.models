@@ -46,20 +46,7 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 
 ## Active workstreams
 
-### WS1 — workflow procedure synchronization
-
-State:
-
-- owner/lane: workspace `dev`;
-- current status: issue #12 adopts the accepted target-optional installation,
-  new-owner creation, immutable SolidCraft reference import and ordered model
-  workflow manuals from the workspace template;
-- next concrete gate: merge source synchronization, then run the three model
-  acceptance workflows in order under #1;
-- blocker/external work: catalog #248 must land so model-local `build/` remains
-  ignored during MCP iteration.
-
-### WS2 — first local Windows acceptance
+### WS1 — first local Windows acceptance
 
 State:
 
@@ -76,11 +63,13 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #12 | dev / workflow sync | now | Merge workflow scripts/manuals from template |
-| #1 | local Windows acceptance | next | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
+| #1 | local Windows acceptance | now | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
 
 ## Recently completed
 
+- #12 synchronized the target-optional installation, new-model owner creation,
+  immutable SolidCraft reference import and ordered model workflows from the
+  workspace template.
 - #8 synchronized the accepted procedural daily manual and rewrote the concrete
   workspace developer manual as an ordered maintenance procedure. Setup now
   states exactly when `bootstrap.ps1` creates/updates
