@@ -44,10 +44,9 @@ foreach ($Name in @('mcp', 'forge')) {
 }
 
 if ($HasExisting) {
-    $ManifestContent = Get-Content -LiteralPath $Manifest -Raw
     Push-Location $Ext
     try {
-        $ManifestContent | & conda run --no-capture-output --name $Environment vcs delete --force
+        & conda run --no-capture-output --name $Environment vcs delete --input $Manifest --force
         if ($LASTEXITCODE -ne 0) {
             throw "vcs2l external dependency deletion failed (exit code $LASTEXITCODE)."
         }

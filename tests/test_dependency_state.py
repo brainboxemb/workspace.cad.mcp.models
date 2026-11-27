@@ -145,6 +145,7 @@ def test_import_script_uses_vcs2l_for_reconciliation():
     ).read_text(encoding="utf-8")
 
     assert "dependency_state.py" in script
-    assert "vcs delete --force" in script
+    assert "vcs delete --input $Manifest --force" in script
+    assert "$ManifestContent |" not in script
     assert "vcs import --input dependencies.repos ext" in script
     assert "Remove-Item" not in script

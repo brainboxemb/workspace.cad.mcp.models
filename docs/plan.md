@@ -71,6 +71,9 @@ State:
 
 ## Recently completed
 
+- #35 fixes the Windows external-rematerialization hang by passing
+  `dependencies.repos` to `vcs delete` as a file with `--input` instead
+  of through a PowerShell stdin pipe.
 - #32 fixes the first real Windows update regression: generated Python package
   metadata below pinned externals no longer looks like user source, while
   tracked edits and untracked real content still fail safely.
