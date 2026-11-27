@@ -4,7 +4,8 @@ Use this for the first MCP test or for disposable Forge experiments that should
 not become a CAD-catalog model yet.
 
 A workbench is local workspace state. It is not a Git model owner, does not
-require a CAD issue branch and is ignored by the workspace repository.
+require a CAD issue branch and is ignored by the workspace repository. It has
+no catalog `model.yml` or `ci.yml`.
 
 ## 1. Create and select a workbench
 
@@ -18,11 +19,29 @@ This creates:
 
 ~~~text
 .workbench/mcp-test/
+└── project.yml
 ~~~
 
 and writes the local target to `workspace.local.yml`.
 
-It also regenerates:
+The generated `project.yml` is local MCP workbench configuration:
+
+~~~yaml
+schema: 1
+forge:
+  source: scpf/model.py
+solidcraft:
+  connect: auto
+evidence:
+  enabled: true
+  log: build/session.jsonl
+  render: build/live/model.png
+~~~
+
+It is not CAD catalog metadata. The MCP uses it for the default Forge source,
+the running SolidCraft GUI connection and bounded session evidence.
+
+The command also regenerates:
 
 ~~~text
 .generated/forge-cad.code-workspace
@@ -34,7 +53,22 @@ The MCP server is bound with its standalone `--workspace` contract. It is not
 bound to `.repos/cad` and catalog dependency tools are therefore unavailable
 in this mode.
 
-## 2. Run doctor
+## 2. Enable live SolidCraft control
+
+Start SolidCraft and enable:
+
+~~~text
+Preferences
+  → Assistant
+  → Agents through MCP
+  → Let AI agents connect
+~~~
+
+The Forge CAD MCP discovers the authenticated localhost control channel through
+Forge. Do not copy ports or tokens into the project file for the normal local
+workflow.
+
+## 3. Run doctor
 
 ~~~powershell
 .\scripts\doctor.ps1
@@ -43,7 +77,7 @@ in this mode.
 Doctor validates the pinned MCP/Forge toolchain, SolidCraft and the exact local
 workbench root.
 
-## 3. Open VS Code
+## 4. Open VS Code
 
 Open:
 
@@ -53,7 +87,7 @@ Open:
 
 The only project folder is the selected local workbench.
 
-## 4. Start the MCP workflow
+## 5. Start the MCP workflow
 
 The first MCP calls should be:
 
@@ -61,22 +95,56 @@ The first MCP calls should be:
 environment
 skill_list
 skill_reference forge-modeling
-skill_reference forge-checking
+skill_reference solidcraft-control
 workspace_status
 ~~~
 
-Then give the modeling assignment.
-
-The assistant can create:
+The assistant should use the maintained Forge source only when it needs it:
 
 ~~~text
 scpf/model.py
 ~~~
 
-through `workspace_write`, compile it, replay it through SolidCraft and keep
-generated evidence below `build/`.
+For interactive work it can then use:
 
-## 5. Decide what happens next
+~~~text
+workspace_write
+forge_live
+solidcraft_live_inspect
+solidcraft_live_execute
+solidcraft_live_render
+~~~
+
+Live actions and evidence are recorded according to `project.yml`. Generated
+files remain below `build/`.
+
+## 6. First acceptance demo
+
+Use this deliberately small model:
+
+~~~text
+plate: 60 × 20 × 4 mm
+hole:  Ø8 mm
+hole position: centred in the plate
+~~~
+
+Acceptance sequence:
+
+1. Ask the assistant to create the plate as maintainable Forge Python.
+2. Apply it to a new active SolidCraft GUI design with `forge_live`.
+3. Inspect the active SolidCraft design and verify the intended dimensions and
+   native structure.
+4. Use native SolidCraft parameter control to change one exposed dimension,
+   then inspect the design again.
+5. Set a useful isometric or top view through SolidCraft live control.
+6. Retrieve the current model image with `solidcraft_live_render`.
+7. Confirm that `build/session.jsonl`, the live render and replay evidence were
+   created inside the workbench.
+
+The purpose of this demo is to prove one complete AI → Forge → live SolidCraft
+control/evidence loop, not catalog publication.
+
+## 7. Decide what happens next
 
 If the experiment is disposable, remove the local workbench when finished.
 
@@ -87,6 +155,6 @@ ignored workbench itself as maintained repository source.
 
 ## Acceptance
 
-Accepted when a fresh local workbench can pass doctor and complete a real
-Forge authoring -> compile -> SolidCraft replay/check cycle without requiring a
-CAD repository branch, issue or PR.
+Accepted when a fresh local workbench can pass doctor and complete a real Forge
+authoring → live SolidCraft apply/inspect/mutate/view/render cycle without a CAD
+repository branch, issue or PR.
