@@ -16,7 +16,14 @@ def git(path: Path, *args: str, check: bool = True) -> subprocess.CompletedProce
     )
 
 
-def make_repo(root: Path, name: str, url: str, version: str) -> Path:
+def make_repo(
+    root: Path,
+    name: str,
+    url: str,
+    version: str,
+    *,
+    shallow: bool = True,
+) -> Path:
     repo = root / name
     repo.mkdir(parents=True)
     subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
@@ -36,6 +43,9 @@ def make_repo(root: Path, name: str, url: str, version: str) -> Path:
     )
     subprocess.run(["git", "tag", version], cwd=repo, check=True)
     subprocess.run(["git", "remote", "add", "origin", url], cwd=repo, check=True)
+    if shallow:
+        head = git(repo, "rev-parse", "HEAD").stdout.strip()
+        (repo / ".git" / "shallow").write_text(head + "\n", encoding="utf-8")
     return repo
 
 
@@ -63,6 +73,21 @@ def test_matching_external_checkouts_are_current(tmp_path):
     make_repo(root, "forge", "https://github.com/example/forge.git", "v2.0.0")
 
     assert dependency_state.dependency_state(manifest, root) == "current"
+
+
+def test_full_history_external_requests_reconcile(tmp_path):
+    root = tmp_path / "ext"
+    root.mkdir()
+    manifest = write_manifest(tmp_path, {"forge": "v2.0.0"})
+    make_repo(
+        root,
+        "forge",
+        "https://github.com/example/forge.git",
+        "v2.0.0",
+        shallow=False,
+    )
+
+    assert dependency_state.dependency_state(manifest, root) == "reconcile"
 
 
 def test_missing_or_stale_external_requests_reconcile(tmp_path):
@@ -147,5 +172,5 @@ def test_import_script_uses_vcs2l_for_reconciliation():
     assert "dependency_state.py" in script
     assert "vcs delete --input $Manifest --force" in script
     assert "$ManifestContent |" not in script
-    assert "vcs import --input dependencies.repos ext" in script
+    assert "vcs import --shallow --input dependencies.repos ext" in script
     assert "Remove-Item" not in script

@@ -114,6 +114,10 @@ def checkout_state(root: Path, name: str, spec: dict) -> str:
             "preserve or remove it before update"
         )
 
+    shallow = _git(path, "rev-parse", "--is-shallow-repository").stdout.strip()
+    if shallow.lower() != "true":
+        return "reconcile"
+
     target = _git(
         path,
         "rev-parse",

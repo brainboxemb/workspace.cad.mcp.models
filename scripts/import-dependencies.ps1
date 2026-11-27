@@ -58,7 +58,7 @@ if ($HasExisting) {
 
 Push-Location $Root
 try {
-    & conda run --no-capture-output --name $Environment vcs import --input dependencies.repos ext
+    & conda run --no-capture-output --name $Environment vcs import --shallow --input dependencies.repos ext
     if ($LASTEXITCODE -ne 0) {
         throw "vcs2l dependency checkout failed (exit code $LASTEXITCODE)."
     }
