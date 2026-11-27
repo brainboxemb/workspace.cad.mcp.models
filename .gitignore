@@ -1,6 +1,7 @@
 ext/
 .repos/
 .generated/
+.workbench/
 workspace.local.yml
 __pycache__/
 .pytest_cache/
