@@ -85,6 +85,32 @@ def test_missing_vcs2l_external_checkout_is_reported(monkeypatch, tmp_path):
         workspace.require_external_toolchain(paths)
 
 
+def test_initial_cad_checkout_is_single_branch_blobless(monkeypatch, tmp_path):
+    data = base_config()
+    cad = tmp_path / "cad"
+    calls = []
+
+    monkeypatch.setattr(
+        workspace,
+        "run",
+        lambda args, **kwargs: calls.append(args) or "",
+    )
+    monkeypatch.setattr(workspace, "require_repo", lambda path, url: None)
+
+    workspace.ensure_cad(data, cad)
+
+    assert calls == [[
+        "git",
+        "clone",
+        "--single-branch",
+        "--filter=blob:none",
+        "--branch",
+        "dev",
+        data["repositories"]["cad"]["url"],
+        str(cad),
+    ]]
+
+
 def test_existing_cad_checkout_is_only_validated(monkeypatch, tmp_path):
     data = base_config()
     cad = tmp_path / "cad"
