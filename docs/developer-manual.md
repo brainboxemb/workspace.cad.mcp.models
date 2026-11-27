@@ -1,98 +1,144 @@
 # Developer manual
 
+Use this document when changing or maintaining
+`brainboxemb/workspace.cad.mcp.models` itself.
+
+For normal local use of the workspace, including first setup on a machine,
+bootstrap, model selection, doctor and VS Code startup, use `docs/manual.md`.
+
 This repository is a concrete consumer of
-`brainboxemb/template.cad.mcp.workspace`.
+`brainboxemb/template.cad.mcp.workspace`. Reusable workspace behavior should
+normally be fixed in the template first and then synchronized here.
 
-## Ownership
+## Before changing this repository
 
-This repository owns only configuration specific to the models workspace:
+1. inspect current issues, pull requests and branches;
+2. read `AGENTS.md`;
+3. read `docs/plan.md`;
+4. create an issue if the change has none;
+5. branch from `dev`;
+6. keep one logical change to one branch and PR.
 
-- which CAD catalog is used;
-- exact MCP/Forge external revisions inherited/accepted from the template;
-- local bootstrap/client-generation entrypoints;
-- workspace-specific acceptance status.
+Do not perform CAD model work in this repository. Model source belongs in
+`.repos/cad/` and in `brainboxemb/2026-011-02.cad.solidcraft`.
 
-Reusable workspace behavior should be fixed in
-`brainboxemb/template.cad.mcp.workspace` first and then synchronized here.
+## Synchronize an accepted template change
 
-## External dependencies
+Use this procedure when `brainboxemb/template.cad.mcp.workspace` has accepted
+reusable behavior that this concrete workspace should adopt.
 
-`dependencies.repos` declares MCP and Forge. vcs2l is pinned in the same
-`cad-mcp-workspace` Conda environment that runs the MCP.
+### 1. Read the accepted template change
 
-```text
-cad-mcp-workspace
-    ├── vcs2l
-    └── Forge CAD MCP runtime
+Use the template's stable `main` branch as the source. Identify exactly which
+shared files changed. Typical shared files are `environment.yml`,
+`dependencies.repos`, `scripts/`, `tests/`, `.github/workflows/` and
+`docs/manual.md`.
 
-dependencies.repos
-    -> vcs import --input dependencies.repos ext
-    -> ext/mcp
-    -> ext/forge
-```
+Do not blindly replace the whole repository.
 
-Do not replace this with custom clone/fetch/checkout code or a second
-normal-use Conda environment.
+### 2. Preserve consumer-specific files
 
-## Active CAD worktree
+Do not overwrite these files with template placeholders:
 
-`workspace.yml` configures:
+- `README.md`;
+- `AGENTS.md`;
+- `workspace.yml`;
+- `docs/handoff.md`;
+- `docs/plan.md`;
+- `docs/developer-manual.md`.
 
-```yaml
-repositories:
-  cad:
-    url: https://github.com/brainboxemb/2026-011-02.cad.solidcraft.git
-    branch: dev
-```
+`workspace.yml` must keep `workspace.id: models` and the CAD repository
+`brainboxemb/2026-011-02.cad.solidcraft` on its configured initial branch.
 
-First bootstrap may clone that repository into `.repos/cad`. Once it exists,
-workspace tooling verifies the origin only. It must not update/switch/reset the
-worktree because normal CAD work happens there.
+### 3. Copy only the intended shared changes
 
-## Local target
+Bring the relevant accepted files from template `main` into the issue branch.
+If the template changes `docs/manual.md`, copy that manual as the shared user
+procedure unless this consumer has a proven local reason to differ.
 
-Create ignored `workspace.local.yml` from the example and select one exact
-owner:
+If commands or file layout change, update this developer manual and the plan in
+the same issue.
 
-```yaml
-schema: 1
+### 4. Run CI
 
-target:
-  model: models/assemblies/simple_mft_assembly
+Open the PR to `dev` and wait for the central `ci` check. Do not merge while
+CI is red.
 
-solidcraft:
-  cli: C:\\path\\to\\solidcraft-cli.exe
-```
+### 5. Integrate with /merge
 
-Changing target is a local session operation and is not committed.
+When CI is green, comment `/merge` on the PR. The repository merge policy
+selects the integration method.
 
-## Template synchronization
+### 6. Update the plan
 
-When reusable behavior changes upstream:
+After merge, remove the completed workstream from active work in
+`docs/plan.md` and leave only a short recently-completed note when useful.
 
-1. inspect the accepted template `main`;
-2. update shared scripts/tests/workflows/manual text in one workspace issue/PR;
-3. preserve consumer-specific `README.md`, `workspace.yml`,
-   `docs/handoff.md`, `docs/plan.md`, `docs/developer-manual.md` and
-   `AGENTS.md`;
-4. run workspace CI;
-5. use `/merge`;
-6. perform the local acceptance affected by the change.
+### 7. Publish the accepted dev checkpoint
 
-Do not silently advance MCP/Forge revisions while synchronizing unrelated
-template changes.
+Create a `dev -> main` PR and use `/merge` again. Do not manually choose
+merge, squash or rebase.
 
-## First local acceptance
+## Change MCP or Forge revisions
 
-From a clean clone:
+MCP and Forge external revisions live only in `dependencies.repos`.
 
-```powershell
-Copy-Item workspace.local.example.yml workspace.local.yml
-# edit target.model and solidcraft.cli
-.\scripts\bootstrap.ps1
-.\scripts\doctor.ps1
-```
+When changing a revision:
 
-Then open `.generated/forge-cad.code-workspace`, configure the Copilot MCP
-server from `.generated/mcp-config.json` and prove real `environment` and
-`skill_list` calls.
+1. change the required MCP/Forge entry in `dependencies.repos`;
+2. update compatibility documentation in the same issue;
+3. run CI;
+4. run the local workspace acceptance affected by the version change;
+5. only then publish the accepted dependency pair.
+
+`scripts/update.ps1` never chooses a newer revision by itself. It materializes
+exactly what `dependencies.repos` declares.
+
+## Change the workspace Conda environment
+
+The one normal-use Conda environment is `cad-mcp-workspace`. Its declarative
+source is `environment.yml`.
+
+If the runtime needs a Python dependency or tool such as vcs2l, change
+`environment.yml`. Do not add a second normal-use Conda environment.
+
+On the next `scripts/bootstrap.ps1` or `scripts/update.ps1` run, that same
+environment is updated from `environment.yml`.
+
+## Change the CAD catalog identity
+
+The concrete catalog identity lives in committed `workspace.yml`. Changing it
+is a workspace identity change and must be an explicit reviewed repository
+change.
+
+Do not use `workspace.yml` to select the model you happen to be editing today.
+
+## Change the active model
+
+The active owner is local state in ignored `workspace.local.yml`.
+
+Use:
+
+`./scripts/select-model.ps1 -Model models/components/wall_hook`
+
+This is a local session operation and does not require a repository PR.
+
+## Test a reusable bootstrap change locally
+
+For changes that affect bootstrap, dependency import, Conda setup, target
+selection, doctor or generated client configuration, repository CI is not the
+final acceptance.
+
+Use a concrete Windows checkout and follow `docs/manual.md` from the relevant
+step. At minimum prove:
+
+1. `bootstrap.ps1` succeeds;
+2. `doctor.ps1` succeeds;
+3. the generated VS Code workspace opens the intended target;
+4. the generated MCP definition starts;
+5. the assistant can call `environment`;
+6. the assistant can call `skill_list`.
+
+If the failure is reusable, fix it in
+`brainboxemb/template.cad.mcp.workspace` first and then synchronize the
+accepted fix back here.
