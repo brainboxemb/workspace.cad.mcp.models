@@ -55,6 +55,25 @@ def load_manifest(path: Path) -> dict[str, dict]:
     return result
 
 
+_GENERATED_DIRS = {
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+}
+
+
+def _is_generated_untracked(relative: str) -> bool:
+    path = Path(relative)
+    return (
+        path.suffix in {".pyc", ".pyo"}
+        or any(part in _GENERATED_DIRS for part in path.parts)
+        or any(part.endswith(".egg-info") for part in path.parts)
+    )
+
+
 def checkout_state(root: Path, name: str, spec: dict) -> str:
     path = (root / name).resolve()
     if not (path / ".git").exists():
@@ -66,15 +85,33 @@ def checkout_state(root: Path, name: str, spec: dict) -> str:
             f"unexpected origin for external {name}: {origin}"
         )
 
-    dirty = _git(
+    tracked = _git(
         path,
         "status",
         "--porcelain",
-        "--untracked-files=all",
+        "--untracked-files=no",
     ).stdout.strip()
-    if dirty:
+    if tracked:
         raise DependencyStateError(
-            f"external {name} has local changes; preserve or remove them before update"
+            f"external {name} has tracked local changes; preserve or remove them before update"
+        )
+
+    untracked = [
+        item
+        for item in _git(
+            path,
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+        ).stdout.splitlines()
+        if item
+    ]
+    unexpected = [item for item in untracked if not _is_generated_untracked(item)]
+    if unexpected:
+        sample = ", ".join(unexpected[:3])
+        raise DependencyStateError(
+            f"external {name} has untracked local content ({sample}); "
+            "preserve or remove it before update"
         )
 
     target = _git(
