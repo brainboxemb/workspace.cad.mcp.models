@@ -148,6 +148,88 @@ def test_create_workbench_refuses_invalid_or_existing_name(monkeypatch, tmp_path
         workspace.create_workbench("mcp-test")
 
 
+def test_bootstrap_without_target_does_not_touch_cad(monkeypatch, tmp_path):
+    data = base_config()
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace, "local_config", lambda required=False: {})
+    monkeypatch.setattr(workspace, "require_external_toolchain", lambda paths: None)
+    monkeypatch.setattr(workspace, "install_toolchain", lambda paths: None)
+    monkeypatch.setattr(
+        workspace,
+        "ensure_cad",
+        lambda *args, **kwargs: pytest.fail(
+            "bootstrap without a catalog target must not touch the CAD checkout"
+        ),
+    )
+
+    workspace.bootstrap()
+
+
+def test_workbench_bootstrap_and_update_do_not_touch_cad(monkeypatch, tmp_path):
+    data = base_config()
+    local = {
+        "schema": 1,
+        "target": {"workbench": "mcp-test"},
+        "solidcraft": {"cli": "solidcraft-cli"},
+    }
+    calls = []
+
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace, "local_config", lambda required=False: local)
+    monkeypatch.setattr(workspace, "require_external_toolchain", lambda paths: None)
+    monkeypatch.setattr(workspace, "install_toolchain", lambda paths: None)
+    monkeypatch.setattr(
+        workspace,
+        "ensure_cad",
+        lambda *args, **kwargs: pytest.fail(
+            "standalone workbench must not touch the CAD checkout"
+        ),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "generate",
+        lambda data, local: calls.append("generate") or {"target": "workbench:mcp-test"},
+    )
+
+    workspace.bootstrap()
+    workspace.update()
+
+    assert calls == ["generate", "generate"]
+
+
+def test_catalog_target_still_ensures_cad_checkout(monkeypatch, tmp_path):
+    data = base_config()
+    local = {
+        "schema": 1,
+        "target": {"model": "models/basic/part"},
+        "solidcraft": {"cli": "solidcraft-cli"},
+    }
+    calls = []
+
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace, "local_config", lambda required=False: local)
+    monkeypatch.setattr(workspace, "require_external_toolchain", lambda paths: None)
+    monkeypatch.setattr(workspace, "install_toolchain", lambda paths: None)
+    monkeypatch.setattr(
+        workspace,
+        "ensure_cad",
+        lambda data, path: calls.append(("cad", path)),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "generate",
+        lambda data, local: calls.append(("generate", None)) or {"target": "models/basic/part"},
+    )
+
+    workspace.bootstrap()
+    workspace.update()
+
+    assert [kind for kind, _ in calls] == ["cad", "generate", "cad", "generate"]
+
+
 def test_missing_vcs2l_external_checkout_is_reported(monkeypatch, tmp_path):
     monkeypatch.setattr(workspace, "ROOT", tmp_path)
     paths = workspace.workspace_paths(base_config())
