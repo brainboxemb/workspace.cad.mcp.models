@@ -1,0 +1,9 @@
+name: cad-mcp-workspace
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - PyYAML==6.0.2
+      - pytest>=8,<9

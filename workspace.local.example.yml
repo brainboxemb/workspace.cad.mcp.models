@@ -1,0 +1,8 @@
+schema: 1
+
+target:
+  model: models/assemblies/simple_mft_assembly
+
+solidcraft:
+  # Absolute path or command visible inside the Conda environment.
+  cli: C:\\absolute\\path\\to\\solidcraft-cli.exe
