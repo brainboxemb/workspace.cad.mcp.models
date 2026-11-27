@@ -87,8 +87,9 @@ git clone https://github.com/brainboxemb/workspace.cad.mcp.models.git
 cd workspace.cad.mcp.models
 ~~~
 
-The committed `workspace.yml` identifies the CAD catalog. Exact MCP and Forge
-revisions are in `dependencies.repos`.
+The committed `workspace.yml` identifies the CAD catalog. The qualified
+toolchain is pinned by immutable release tags in `dependencies.repos`:
+Forge CAD MCP `v0.0.2` and Forge/SCPF `v0.25.0`.
 
 ## 5. Create local machine configuration
 
