@@ -46,18 +46,6 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 
 ## Active workstreams
 
-### WS0 — procedural manuals
-
-State:
-
-- owner/lane: workspace `dev`;
-- current status: issue #8 synchronizes the accepted procedural daily manual
-  and rewrites the concrete workspace developer manual as an ordered
-  maintenance procedure;
-- next concrete gate: merge the documentation update and keep local Windows
-  acceptance as the only remaining runtime gate;
-- blocker/external work: none.
-
 ### WS1 — first local Windows acceptance
 
 State:
@@ -75,11 +63,14 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #8 | dev / documentation | now | Merge procedural manual synchronization |
-| #1 | local Windows acceptance | next | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
+| #1 | local Windows acceptance | now | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
 
 ## Recently completed
 
+- #8 synchronized the accepted procedural daily manual and rewrote the concrete
+  workspace developer manual as an ordered maintenance procedure. Setup now
+  states exactly when `bootstrap.ps1` creates/updates
+  `cad-mcp-workspace` and what happens next.
 - #5 adopts the template's single Conda environment model: vcs2l and the Forge
   MCP/runtime both run in `cad-mcp-workspace`; no environment switching is
   part of the normal workflow.
