@@ -17,6 +17,18 @@ git --version
 If Git is not available, install Git for Windows first, open a new PowerShell
 window and repeat the command.
 
+If you want the workspace to open and merge GitHub pull requests for you, also
+check GitHub CLI:
+
+~~~powershell
+gh --version
+gh auth status
+~~~
+
+If `gh` is missing, install GitHub CLI. If it is not authenticated, run
+`gh auth login`. The workspace PR helper uses that existing authentication and
+does not store a separate GitHub token.
+
 ## 2. Install Conda
 
 Check whether Conda is already available:
