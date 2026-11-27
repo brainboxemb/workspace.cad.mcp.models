@@ -71,6 +71,9 @@ State:
 
 ## Recently completed
 
+- #32 fixes the first real Windows update regression: generated Python package
+  metadata below pinned externals no longer looks like user source, while
+  tracked edits and untracked real content still fail safely.
 - #29 synchronizes automatic MCP/Forge external reconciliation from the
   workspace template, so normal upgrades use `git pull` +
   `scripts/update.ps1` without manual `ext/` deletion.
