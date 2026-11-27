@@ -14,8 +14,9 @@ catalog repository.
 - normal source integration uses the repository-local `/merge` policy;
 - MCP and Forge are exact released externals declared in `dependencies.repos`
   and materialized with vcs2l under `ext/`;
-- the accepted toolchain pins are Forge CAD MCP `v0.0.3` and Forge
-  `v0.25.0`, with SolidCraft 0.49.0 live GUI control plus headless evidence;
+- the accepted toolchain pins are Forge CAD MCP `v0.0.4` and Forge
+  `v0.25.0`, with SolidCraft 0.50.0 / CAD runtime v0.3.8 live GUI control plus
+  headless evidence;
 - one dedicated `cad-mcp-workspace` Conda environment contains vcs2l and the
   Forge MCP/runtime dependencies;
 - the CAD catalog is configured as
@@ -59,7 +60,7 @@ State:
 - current status: source configuration is aligned with the current
   template/vcs2l baseline and permanent `dev` CI is green; local Windows
   acceptance remains;
-- next concrete gate: pull this workspace on Windows, update to MCP v0.0.3,
+- next concrete gate: pull this workspace on Windows, update to MCP v0.0.4,
   create `mcp-test` without a CAD checkout, run doctor and complete the
   documented 60 × 20 × 4 mm / Ø8 live SolidCraft demo;
 - blocker/external work: the real Windows GUI acceptance still has to be run.
@@ -68,7 +69,8 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #1 | local Windows acceptance | now | Run the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows |
+| #41 | workspace `dev` | now | Adopt MCP v0.0.4 / SolidCraft 0.50.0 pins before local acceptance |
+| #1 | local Windows acceptance | next | Run the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows |
 
 ## Recently completed
 
