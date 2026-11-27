@@ -50,11 +50,25 @@ def local_config(*, required: bool = False) -> dict:
     return _yaml(LOCAL_PATH, required=required)
 
 
-def has_target(local: dict) -> bool:
+def selected_target_kind(local: dict) -> str | None:
     target = local.get("target")
-    return isinstance(target, dict) and bool(
-        target.get("model") or target.get("workbench")
-    )
+    if not isinstance(target, dict):
+        return None
+    model = bool(target.get("model"))
+    workbench = bool(target.get("workbench"))
+    if model and workbench:
+        raise WorkspaceError(
+            "target must contain exactly one of model or workbench"
+        )
+    if model:
+        return "catalog"
+    if workbench:
+        return "workbench"
+    return None
+
+
+def has_target(local: dict) -> bool:
+    return selected_target_kind(local) is not None
 
 
 def _path(value: str) -> Path:
@@ -539,10 +553,12 @@ def bootstrap() -> None:
     data = config()
     paths = workspace_paths(data)
     require_external_toolchain(paths)
-    ensure_cad(data, paths["cad"])
     install_toolchain(paths)
     local = local_config(required=False)
-    if has_target(local):
+    kind = selected_target_kind(local)
+    if kind == "catalog":
+        ensure_cad(data, paths["cad"])
+    if kind is not None:
         state = generate(data, local)
         print(json.dumps({"ready_for_doctor": True, **state}, indent=2))
     else:
@@ -560,16 +576,12 @@ def update() -> None:
     data = config()
     paths = workspace_paths(data)
     require_external_toolchain(paths)
-    if not paths["cad"].exists():
-        ensure_cad(data, paths["cad"])
-    else:
-        url = data["repositories"]["cad"].get("url")
-        if not url:
-            raise WorkspaceError("repositories.cad.url is required")
-        require_repo(paths["cad"], url)
     install_toolchain(paths)
     local = local_config(required=False)
-    if has_target(local):
+    kind = selected_target_kind(local)
+    if kind == "catalog":
+        ensure_cad(data, paths["cad"])
+    if kind is not None:
         print(json.dumps(generate(data, local), indent=2))
     else:
         print("toolchain updated; no local target selected")
