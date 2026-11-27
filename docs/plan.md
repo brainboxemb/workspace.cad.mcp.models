@@ -46,7 +46,20 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 
 ## Active workstreams
 
-### WS1 — first local Windows acceptance
+### WS1 — workflow procedure synchronization
+
+State:
+
+- owner/lane: workspace `dev`;
+- current status: issue #12 adopts the accepted target-optional installation,
+  new-owner creation, immutable SolidCraft reference import and ordered model
+  workflow manuals from the workspace template;
+- next concrete gate: merge source synchronization, then run the three model
+  acceptance workflows in order under #1;
+- blocker/external work: catalog #248 must land so model-local `build/` remains
+  ignored during MCP iteration.
+
+### WS2 — first local Windows acceptance
 
 State:
 
@@ -63,7 +76,8 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #1 | local Windows acceptance | now | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
+| #12 | dev / workflow sync | now | Merge workflow scripts/manuals from template |
+| #1 | local Windows acceptance | next | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
 
 ## Recently completed
 
@@ -80,14 +94,14 @@ State:
 
 ## Next release/checkpoint
 
-The first acceptance checkpoint is:
+The first acceptance checkpoint is now an ordered workflow test:
 
-1. `vcs import --input dependencies.repos ext` succeeds;
-2. the CAD catalog is cloned/validated at `.repos/cad`;
-3. the project Conda environment installs MCP/SCPF;
-4. `doctor.ps1` is ready for one exact selected model;
-5. VS Code starts the generated MCP definition;
-6. real `environment` and `skill_list` calls succeed.
+1. basic installation succeeds with no target selected;
+2. create and verify one new Forge model;
+3. convert one independently authored SolidCraft .sc checkpoint to Forge while
+   preserving the original under `reference/`;
+4. continue one existing Forge model from Git;
+5. prove owner-local `build/` scratch never appears as maintained Git source.
 
 After that, record any proven template friction upstream in
 `brainboxemb/template.cad.mcp.workspace`.
