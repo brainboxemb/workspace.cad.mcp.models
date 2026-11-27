@@ -67,6 +67,10 @@ State:
 
 ## Recently completed
 
+- #8 synchronized the accepted procedural daily manual and rewrote the concrete
+  workspace developer manual as an ordered maintenance procedure. Setup now
+  states exactly when `bootstrap.ps1` creates/updates
+  `cad-mcp-workspace` and what happens next.
 - #5 adopts the template's single Conda environment model: vcs2l and the Forge
   MCP/runtime both run in `cad-mcp-workspace`; no environment switching is
   part of the normal workflow.

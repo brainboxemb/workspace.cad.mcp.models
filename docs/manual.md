@@ -1,136 +1,201 @@
 # Workspace manual
 
-This manual is for daily use of a concrete repository created from
-`template.cad.mcp.workspace`, for example `workspace.cad.mcp.models`.
+Use this manual for an existing concrete CAD MCP workspace, for example
+`workspace.cad.mcp.models`.
 
-## Files you normally touch
+If you are creating a new workspace repository from the template, use
+`docs/developer-manual.md` instead.
 
-Committed:
+## First use on a machine
 
-- `dependencies.repos`: exact MCP and Forge external Git revisions consumed by
-  vcs2l;
-- `workspace.yml`: identifies the active CAD repository and workspace/runtime
-  settings.
+Clone the concrete workspace repository:
 
-Local and ignored:
-
-- `workspace.local.yml`: exact active model owner and SolidCraft CLI;
-- `ext/`: vcs2l-managed MCP and Forge checkouts;
-- `.repos/cad/`: active CAD worktree;
-- `.generated/`: generated VS Code and MCP client files.
-
-Do not edit files below `.generated/` manually.
-
-## Conda environment
-
-This workspace uses one dedicated Conda environment:
-
-```text
-cad-mcp-workspace
-  ├── vcs2l
-  ├── Forge CAD MCP runtime
-  └── workspace Python dependencies
+```powershell
+git clone https://github.com/brainboxemb/workspace.cad.mcp.models.git
+cd workspace.cad.mcp.models
 ```
 
-`bootstrap.ps1` creates this environment once from `environment.yml` or
-updates it when the committed environment definition changes. There is no
-normal workflow that switches to a second developer-tools environment.
-
-## First local setup
-
-From PowerShell in the concrete workspace repository:
+Create your ignored local configuration:
 
 ```powershell
 Copy-Item workspace.local.example.yml workspace.local.yml
-# Edit workspace.local.yml: target.model + solidcraft.cli
+```
+
+Edit `workspace.local.yml` and set:
+
+- the exact `target.model`;
+- the local SolidCraft CLI path.
+
+Then run:
+
+```powershell
 .\scripts\bootstrap.ps1
 .\scripts\doctor.ps1
 ```
 
-Bootstrap:
+You do not create or activate a Conda environment yourself.
 
-1. creates/updates `cad-mcp-workspace` from `environment.yml`;
-2. runs `vcs import --input dependencies.repos ext` in that environment;
-3. clones the configured CAD repository only when `.repos/cad` is absent;
-4. installs the MCP and SCPF packages from `ext/mcp` and `ext/forge` in the
-   same environment;
-5. generates target-specific client files.
+The first `bootstrap.ps1` run creates `cad-mcp-workspace` from
+`environment.yml`. Later bootstrap runs update that same environment. vcs2l,
+the Forge MCP runtime and the workspace Python dependencies all run from this
+one environment.
 
-An existing CAD checkout is never reset, cleaned, switched or pulled by
-bootstrap.
+When doctor succeeds, open:
 
-## Generated files
+```text
+.generated/forge-cad.code-workspace
+```
 
-`.generated/forge-cad.code-workspace` opens only the selected target owner as
-the normal VS Code project folder.
+Use `.generated/mcp-config.json` as the MCP server definition for the VS Code
+assistant.
 
-`.generated/mcp-config.json` contains the absolute stdio MCP definition for
-the selected target. It uses the project Conda environment's Python directly.
+## Start a normal work session
 
-Use the generated MCP definition in the VS Code Copilot MCP configuration.
-Do not hand-maintain another set of these absolute paths.
+For an already bootstrapped workspace:
 
-## Select another model
+1. open PowerShell in the workspace repository;
+2. run:
+
+   ```powershell
+   .\scripts\doctor.ps1
+   ```
+
+3. open `.generated/forge-cad.code-workspace`;
+4. start the assistant;
+5. ask it to call `environment`;
+6. confirm `cad_ready: true` and the expected target owner;
+7. ask it to call `skill_list` before starting CAD work.
+
+You normally do not activate `cad-mcp-workspace` manually. The workspace
+scripts and generated MCP configuration invoke it directly.
+
+## Work on the CAD repository
+
+The active CAD worktree is:
+
+```text
+.repos/cad/
+```
+
+Use normal Git branches, commits and PRs there for model work.
+
+Workspace maintenance does not pull, reset, clean or switch this checkout after
+it exists.
+
+Do not commit CAD model changes to the workspace repository.
+
+## Change the active model
+
+From the workspace repository:
 
 ```powershell
 .\scripts\select-model.ps1 -Model models\components\wall_hook
 .\scripts\doctor.ps1
 ```
 
-Selection must resolve to one folder below the CAD repository's `models/`
-tree containing its own `model.yml`.
+The selected path must be an exact model owner containing `model.yml`.
 
-The command rewrites only local `workspace.local.yml` and generated client
-files. It does not change the CAD Git branch.
+The command updates ignored `workspace.local.yml` and regenerates the client
+configuration. It does not change the CAD Git branch.
 
-Restart the MCP/session after changing target.
+Restart the MCP/assistant session after changing the target.
 
-## Update the external toolchain
+## Update the MCP/Forge toolchain
+
+When the workspace repository receives an accepted change to
+`environment.yml` or `dependencies.repos`, run:
 
 ```powershell
 .\scripts\update.ps1
 .\scripts\doctor.ps1
 ```
 
-`update.ps1` reruns vcs2l against the exact revisions committed in
-`dependencies.repos`, reinstalls the project packages and regenerates client
-files.
+`update.ps1`:
 
-Changing an MCP or Forge revision means editing `dependencies.repos` in a
-reviewed workspace-template change. The script does not invent or advance
-versions.
+1. updates the existing `cad-mcp-workspace` environment from
+   `environment.yml`;
+2. reruns vcs2l using the exact revisions in `dependencies.repos`;
+3. reinstalls MCP/SCPF from `ext/mcp` and `ext/forge`;
+4. regenerates the client files.
 
-It deliberately does **not** update or switch the CAD repository. Manage the CAD
-worktree with normal Git because it can contain your active branch and edits.
+It does not choose newer MCP or Forge revisions by itself and it does not update
+the CAD worktree.
 
-## Daily model workflow
+## Verify the local environment
 
-1. Open `.generated/forge-cad.code-workspace`.
-2. Make sure the generated MCP config is active in the Copilot harness.
-3. Ask the assistant to call `environment`.
-4. Verify `cad_ready: true` and the exact `model_id` / `model_relative`.
-5. Ask it to call `skill_list` and read the appropriate skill.
-6. Work on the selected owner.
-7. Keep Git branching/commit/PR work in the CAD repository, not in this
-   workspace repository.
-
-## Troubleshooting
-
-Run:
-
-```powershell
-.\scripts\doctor.ps1
-```
-
-To verify vcs2l in the workspace environment:
+To verify that vcs2l is installed in the one workspace environment:
 
 ```powershell
 conda run --no-capture-output --name cad-mcp-workspace vcs --help
 ```
 
-If `ext/mcp` or `ext/forge` is missing, rerun
-`scripts/import-dependencies.ps1`. Do not replace vcs2l with ad-hoc clone
-logic.
+To inspect the environment itself:
 
-If the CAD checkout is dirty, that is normal during model work; workspace
-bootstrap does not modify it.
+```powershell
+conda env list
+```
+
+You should see `cad-mcp-workspace`.
+
+## If bootstrap fails
+
+Run the failing step again only after reading its error.
+
+Common checks:
+
+### Conda is not found
+
+Verify:
+
+```powershell
+conda --version
+```
+
+If that command fails, fix the local Conda installation first.
+
+### MCP or Forge checkout is missing
+
+Run:
+
+```powershell
+.\scripts\import-dependencies.ps1
+```
+
+That command uses vcs2l from `cad-mcp-workspace` and recreates the exact
+external revisions from `dependencies.repos`.
+
+### CAD checkout is dirty
+
+That is normally expected during model development. Bootstrap/update must not
+clean it.
+
+### Doctor fails on the target
+
+Check `workspace.local.yml`. `target.model` must point to an existing exact
+owner below `.repos/cad/models/` and that owner must contain `model.yml`.
+
+### SolidCraft CLI is not found
+
+Correct `solidcraft.cli` in `workspace.local.yml`, then rerun:
+
+```powershell
+.\scripts\doctor.ps1
+```
+
+## Local files created by the workspace
+
+These paths are intentionally not committed:
+
+```text
+workspace.local.yml
+ext/
+.repos/
+.generated/
+```
+
+Their roles are:
+
+- `workspace.local.yml`: current local target and SolidCraft path;
+- `ext/`: exact MCP and Forge external checkouts;
+- `.repos/cad/`: active CAD worktree;
+- `.generated/`: generated VS Code and MCP client configuration.
