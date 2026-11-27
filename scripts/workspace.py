@@ -317,6 +317,20 @@ def create_workbench(name: str) -> dict:
     if owner.exists():
         raise WorkspaceError("local workbench already exists")
     owner.mkdir(parents=True)
+    project = {
+        "schema": 1,
+        "forge": {"source": "scpf/model.py"},
+        "solidcraft": {"connect": "auto"},
+        "evidence": {
+            "enabled": True,
+            "log": "build/session.jsonl",
+            "render": "build/live/model.png",
+        },
+    }
+    (owner / "project.yml").write_text(
+        yaml.safe_dump(project, sort_keys=False),
+        encoding="utf-8",
+    )
 
     existing = local_config(required=False)
     cli = None
@@ -336,6 +350,7 @@ def create_workbench(name: str) -> dict:
         "created": True,
         "workbench": normalized,
         "root": str(owner),
+        "project": "project.yml",
         "source_expected": "scpf/model.py",
         "state": state,
     }
@@ -534,8 +549,9 @@ def bootstrap() -> None:
         print(json.dumps({
             "ready_for_doctor": False,
             "message": (
-                "Toolchain installed. No model target is selected yet; run "
-                "create-model.ps1 or select-model.ps1, then run doctor.ps1."
+                "Toolchain installed. No target is selected yet; run "
+                "create-workbench.ps1, create-model.ps1 or select-model.ps1, "
+                "then run doctor.ps1."
             ),
         }, indent=2))
 
