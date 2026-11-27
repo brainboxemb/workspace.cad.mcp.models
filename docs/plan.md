@@ -68,8 +68,7 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #38 | workspace `dev` | now | Publish the stable template workbench/MCP v0.0.3 baseline into this concrete workspace |
-| #1 | local Windows acceptance | next | Run the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows |
+| #1 | local Windows acceptance | now | Run the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows |
 
 ## Recently completed
 
