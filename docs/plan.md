@@ -71,7 +71,7 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #56 | workspace `dev` | now | Sync standalone Codex policy that keeps Forge/SolidCraft knowledge behind MCP |
+| #56 | workspace `dev` | now | Sync standalone Codex MCP boundary and task-to-skill router |
 | #53 | workspace `dev` | complete | MCP v0.0.6 fast-knowledge patch published to stable main |
 | #50 | workspace `dev` | complete | MCP v0.0.5 fast-status patch published to stable main |
 | #47 | workspace `dev` | complete | Project-local Codex MCP config published to stable main |

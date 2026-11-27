@@ -156,6 +156,9 @@ def test_create_workbench_uses_standalone_mcp_workspace(monkeypatch, tmp_path):
     assert state["codex_policy"] == str(policy_path)
     policy = policy_path.read_text(encoding="utf-8")
     assert "forgeCad.skill_reference" in policy
+    assert "forge-modeling" in policy
+    assert "solidcraft-control" in policy
+    assert "solidcraft-to-forge" in policy
     assert "Do not use shell commands" in policy
     assert "Do not use GitHub, web search" in policy
     assert "report that gap instead of bypassing the MCP boundary" in policy

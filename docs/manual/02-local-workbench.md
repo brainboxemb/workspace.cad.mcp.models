@@ -29,12 +29,18 @@ The `.codex/config.toml` file binds the Codex IDE extension directly to the
 same Forge CAD MCP stdio command used by the workspace. A separately installed
 global `codex` CLI is not required for the normal VS Code workbench flow.
 
-The generated `AGENTS.md` keeps CAD authoring behind the intended MCP
-boundary. Forge API/docs/examples and SolidCraft command knowledge must be read
-through `forgeCad`; Codex must not inspect `ext/forge` directly or use
-GitHub/web search as an implicit fallback. Repository or external research is
-still allowed when the user explicitly asks for it. `update.ps1` regenerates
-this local policy for an existing standalone workbench.
+The generated `AGENTS.md` is the Codex router for the standalone workbench,
+matching the pattern used by SolidCraft itself: hard boundaries stay in
+`AGENTS.md`, while task-specific instructions stay in MCP skills. It routes
+Forge authoring to `forge-modeling`, live GUI work to `solidcraft-control`
+and native SolidCraft conversion to `solidcraft-to-forge`. Codex loads the
+matching `SKILL.md` through `forgeCad.skill_reference` before task-specific
+work and reads API/docs/examples through that skill.
+
+Codex must not inspect `ext/forge` directly or use GitHub/web search as an
+implicit fallback for release-matched CAD knowledge. Repository or external
+research is still allowed when the user explicitly asks for it. `update.ps1`
+regenerates this local policy for an existing standalone workbench.
 
 and writes the local target to `workspace.local.yml`.
 
