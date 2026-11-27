@@ -3,6 +3,11 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Environment = "cad-mcp-workspace"
 $EnvironmentFile = Join-Path $Root "environment.yml"
 
+& (Join-Path $PSScriptRoot "import-dependencies.ps1")
+if ($LASTEXITCODE -ne 0) {
+    throw "External dependency import failed."
+}
+
 $Known = conda env list --json | ConvertFrom-Json
 $Exists = $false
 foreach ($Path in $Known.envs) {

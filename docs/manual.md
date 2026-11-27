@@ -7,16 +7,37 @@ This manual is for daily use of a concrete repository created from
 
 Committed:
 
-- `workspace.yml`: identifies the MCP/toolchain and CAD repository for this
-  workspace.
+- `dependencies.repos`: exact MCP and Forge external Git revisions consumed by
+  vcs2l;
+- `workspace.yml`: identifies the active CAD repository and workspace/runtime
+  settings.
 
 Local and ignored:
 
 - `workspace.local.yml`: exact active model owner and SolidCraft CLI;
-- `.repos/`: local child checkouts;
+- `ext/`: vcs2l-managed MCP and Forge checkouts;
+- `.repos/cad/`: active CAD worktree;
 - `.generated/`: generated VS Code and MCP client files.
 
 Do not edit files below `.generated/` manually.
+
+## Prerequisite: vcs2l
+
+The shared developer-tools environment owns vcs2l:
+
+```text
+brainboxemb/tool.py-dev-env
+  -> Conda environment brainboxemb-dev-tools
+  -> vcs2l
+```
+
+Bootstrap first tries a `vcs` executable already available in the current
+shell. Otherwise it runs `vcs` through the shared
+`brainboxemb-dev-tools` Conda environment.
+
+If neither is available, install/update `brainboxemb-dev-tools` using
+`brainboxemb/tool.py-dev-env`. vcs2l does not belong in this workspace's
+project-specific Conda environment.
 
 ## First local setup
 
@@ -29,9 +50,13 @@ Copy-Item workspace.local.example.yml workspace.local.yml
 .\scripts\doctor.ps1
 ```
 
-Bootstrap creates/updates the dedicated Conda environment, manages the MCP and
-exact Forge toolchain checkouts, clones the configured CAD repository when it
-does not exist, installs MCP/SCPF and generates client files.
+Bootstrap:
+
+1. runs `vcs import --input dependencies.repos ext`;
+2. creates/updates the dedicated project Conda environment;
+3. clones the configured CAD repository only when `.repos/cad` is absent;
+4. installs the MCP and SCPF packages from `ext/mcp` and `ext/forge`;
+5. generates target-specific client files.
 
 An existing CAD checkout is never reset, cleaned, switched or pulled by
 bootstrap.
@@ -42,7 +67,7 @@ bootstrap.
 the normal VS Code project folder.
 
 `.generated/mcp-config.json` contains the absolute stdio MCP definition for
-the selected target. It uses the Conda environment's Python directly.
+the selected target. It uses the project Conda environment's Python directly.
 
 Use the generated MCP definition in the VS Code Copilot MCP configuration.
 Do not hand-maintain another set of these absolute paths.
@@ -62,15 +87,20 @@ files. It does not change the CAD Git branch.
 
 Restart the MCP/session after changing target.
 
-## Update the toolchain
+## Update the external toolchain
 
 ```powershell
 .\scripts\update.ps1
 .\scripts\doctor.ps1
 ```
 
-Update reasserts the exact configured MCP and Forge commits, then reinstalls
-their Python packages.
+`update.ps1` reruns vcs2l against the exact revisions committed in
+`dependencies.repos`, reinstalls the project packages and regenerates client
+files.
+
+Changing an MCP or Forge revision means editing `dependencies.repos` in a
+reviewed workspace-template change. The script does not invent or advance
+versions.
 
 It deliberately does **not** update or switch the CAD repository. Manage the CAD
 worktree with normal Git because it can contain your active branch and edits.
@@ -94,11 +124,15 @@ Run:
 .\scripts\doctor.ps1
 ```
 
-The underlying MCP doctor validates the configured CAD library and exact model
-owner, the supported SCPF/Forge pair and the SolidCraft CLI version.
+If bootstrap cannot find `vcs`, verify the shared developer-tools environment:
 
-If bootstrap reports a dirty MCP or Forge checkout, do not force-clean it.
-Inspect the unexpected modification first.
+```powershell
+conda run --no-capture-output --name brainboxemb-dev-tools vcs --help
+```
+
+If `ext/mcp` or `ext/forge` is missing, rerun
+`scripts/import-dependencies.ps1`. Do not replace vcs2l with ad-hoc clone
+logic.
 
 If the CAD checkout is dirty, that is normal during model work; workspace
 bootstrap does not modify it.

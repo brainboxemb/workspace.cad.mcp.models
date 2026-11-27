@@ -2,7 +2,6 @@ from pathlib import Path
 import json
 
 import pytest
-import yaml
 
 import scripts.workspace as workspace
 
@@ -13,16 +12,14 @@ def base_config():
         "workspace": {"id": "test"},
         "environment": {"conda_name": "cad-mcp-workspace"},
         "repositories": {
-            "mcp": {"url": "https://github.com/example/mcp.git", "ref": "main"},
-            "forge": {
-                "url": "https://github.com/example/forge.git",
-                "version": "0.19.0",
-                "commit": "a" * 40,
-            },
             "cad": {"url": "https://github.com/example/cad.git", "branch": "dev"},
         },
         "solidcraft": {"version": "0.49.0"},
-        "paths": {"repositories": ".repos", "generated": ".generated"},
+        "paths": {
+            "externals": "ext",
+            "cad": ".repos/cad",
+            "generated": ".generated",
+        },
     }
 
 
@@ -36,6 +33,14 @@ def test_model_relative_rejects_catalog_and_traversal():
         workspace.model_relative("components/part")
 
 
+def test_workspace_paths_separate_externals_from_active_cad(monkeypatch, tmp_path):
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    paths = workspace.workspace_paths(base_config())
+    assert paths["mcp"] == (tmp_path / "ext" / "mcp").resolve()
+    assert paths["forge"] == (tmp_path / "ext" / "forge").resolve()
+    assert paths["cad"] == (tmp_path / ".repos" / "cad").resolve()
+
+
 def test_generate_opens_only_exact_target(monkeypatch, tmp_path):
     data = base_config()
     local = {
@@ -44,10 +49,9 @@ def test_generate_opens_only_exact_target(monkeypatch, tmp_path):
         "solidcraft": {"cli": r"C:\SolidCraft\solidcraft-cli.exe"},
     }
 
-    repos = tmp_path / ".repos"
-    for name in ("mcp", "forge", "cad"):
-        (repos / name).mkdir(parents=True)
-    owner = repos / "cad" / "models" / "components" / "part"
+    (tmp_path / "ext" / "mcp" / ".git").mkdir(parents=True)
+    (tmp_path / "ext" / "forge" / ".git").mkdir(parents=True)
+    owner = tmp_path / ".repos" / "cad" / "models" / "components" / "part"
     owner.mkdir(parents=True)
     (owner / "model.yml").write_text("id: part\n", encoding="utf-8")
 
@@ -70,6 +74,14 @@ def test_generate_opens_only_exact_target(monkeypatch, tmp_path):
     assert "--cad-library" in args
     assert "--model-root" in args
     assert "models/components/part" in args
+    assert str((tmp_path / "ext" / "forge").resolve()) in args
+
+
+def test_missing_vcs2l_external_checkout_is_reported(monkeypatch, tmp_path):
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    paths = workspace.workspace_paths(base_config())
+    with pytest.raises(workspace.WorkspaceError, match="import-dependencies.ps1"):
+        workspace.require_external_toolchain(paths)
 
 
 def test_existing_cad_checkout_is_only_validated(monkeypatch, tmp_path):
