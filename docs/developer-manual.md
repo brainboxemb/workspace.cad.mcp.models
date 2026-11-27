@@ -3,7 +3,10 @@
 Use this document when changing or maintaining
 `brainboxemb/workspace.cad.mcp.models` itself.
 
-For normal model work use the ordered procedures in `docs/manual/`: basic installation, new model, SolidCraft-to-Forge conversion and existing-model editing. `docs/manual.md` is only the entrypoint.
+For normal work use the ordered procedures in `docs/manual/`: basic
+installation, local MCP workbench, catalog model creation,
+SolidCraft-to-Forge conversion and existing-model editing.
+`docs/manual.md` is only the entrypoint.
 
 This repository is a concrete consumer of
 `brainboxemb/template.cad.mcp.workspace`. Reusable workspace behavior should
@@ -58,11 +61,11 @@ procedure unless this consumer has a proven local reason to differ.
 If commands or file layout change, update this developer manual and the plan in
 the same issue.
 
-The first CAD checkout is intentionally lightweight: bootstrap clones only the
-configured development branch and uses a blobless partial clone. This prevents
-large generated or historical blobs from unrelated refs from being transferred
-during initial setup. After the checkout exists, workspace maintenance only
-validates its origin and never changes its branch or worktree state.
+A basic bootstrap or standalone workbench does not create the CAD checkout.
+When catalog work is selected for the first time, that checkout is intentionally
+lightweight: only the configured development branch is cloned with a blobless
+partial clone. After it exists, workspace maintenance only validates its origin
+and never changes its branch or worktree state.
 
 MCP and Forge are different: they are disposable vcs2l-managed externals below
 `ext/`. Bootstrap and update validate them against `dependencies.repos`.
@@ -147,15 +150,21 @@ change.
 
 Do not use `workspace.yml` to select the model you happen to be editing today.
 
-## Change the active model
+## Change the active target
 
-The active owner is local state in ignored `workspace.local.yml`.
+The active target is local state in ignored `workspace.local.yml`.
 
-Use:
+For a disposable standalone session:
+
+`./scripts/create-workbench.ps1 -Name mcp-test`
+
+For an existing catalog owner:
 
 `./scripts/select-model.ps1 -Model models/components/wall_hook`
 
-This is a local session operation and does not require a repository PR.
+A workbench stays below ignored `.workbench/` and does not require the CAD
+catalog. Catalog selection uses the configured `.repos/cad` checkout. These
+are local session operations and do not require a workspace repository PR.
 
 ## Test a reusable bootstrap change locally
 
@@ -166,12 +175,16 @@ final acceptance.
 Use a concrete Windows checkout and follow `docs/manual.md` from the relevant
 step. At minimum prove:
 
-1. `bootstrap.ps1` succeeds;
-2. `doctor.ps1` succeeds;
-3. the generated VS Code workspace opens the intended target;
-4. the generated MCP definition starts;
-5. the assistant can call `environment`;
-6. the assistant can call `skill_list`.
+1. `bootstrap.ps1` succeeds without creating the CAD catalog for a standalone
+   workbench;
+2. `create-workbench.ps1 -Name mcp-test` creates local `project.yml`;
+3. `doctor.ps1` succeeds;
+4. the generated VS Code workspace opens only the intended workbench;
+5. the generated MCP definition starts;
+6. the assistant can call `environment`, `skill_list`,
+   `forge-modeling` and `solidcraft-control`;
+7. the documented live SolidCraft author/apply/inspect/mutate/view/render demo
+   completes and writes bounded evidence below `build/`.
 
 If the failure is reusable, fix it in
 `brainboxemb/template.cad.mcp.workspace` first and then synchronize the

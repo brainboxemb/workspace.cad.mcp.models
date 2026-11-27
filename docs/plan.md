@@ -14,15 +14,16 @@ catalog repository.
 - normal source integration uses the repository-local `/merge` policy;
 - MCP and Forge are exact released externals declared in `dependencies.repos`
   and materialized with vcs2l under `ext/`;
-- the accepted toolchain pins are Forge CAD MCP `v0.0.2` and Forge
-  `v0.25.0`;
+- the accepted toolchain pins are Forge CAD MCP `v0.0.3` and Forge
+  `v0.25.0`, with SolidCraft 0.49.0 live GUI control plus headless evidence;
 - one dedicated `cad-mcp-workspace` Conda environment contains vcs2l and the
   Forge MCP/runtime dependencies;
 - the CAD catalog is configured as
   `brainboxemb/2026-011-02.cad.solidcraft` with initial branch `dev`;
 - the active CAD worktree is local at `.repos/cad/` and is never
   pull/reset/clean/switch managed once it exists;
-- the active target is local in ignored `workspace.local.yml`;
+- the active target is local in ignored `workspace.local.yml` and may be
+  either a maintained catalog owner or an ignored standalone workbench;
 - generated client configuration lives below ignored `.generated/`;
 - bootstrap/update reconcile clean vcs2l-managed MCP/Forge externals to the
   committed release tags automatically and never touch the CAD worktree.
@@ -58,19 +59,22 @@ State:
 - current status: source configuration is aligned with the current
   template/vcs2l baseline and permanent `dev` CI is green; local Windows
   acceptance remains;
-- next concrete gate: clone this workspace locally, create
-  `workspace.local.yml`, run vcs2l/bootstrap + doctor, open the generated VS
-  Code workspace and complete real MCP `environment` + `skill_list` calls;
-- blocker/external work: requires the local SolidCraft CLI path.
+- next concrete gate: pull this workspace on Windows, update to MCP v0.0.3,
+  create `mcp-test` without a CAD checkout, run doctor and complete the
+  documented 60 × 20 × 4 mm / Ø8 live SolidCraft demo;
+- blocker/external work: the real Windows GUI acceptance still has to be run.
 
 ## Open issue assignment
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #1 | local Windows acceptance | now | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
+| #1 | local Windows acceptance | now | Run the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows |
 
 ## Recently completed
 
+- #38 synchronizes the standalone workbench, local `project.yml`, MCP
+  `v0.0.3` live SolidCraft control and no-CAD-checkout bootstrap from the
+  stable workspace template.
 - #35 fixes the Windows external-rematerialization hang by passing
   `dependencies.repos` to `vcs delete` as a file with `--input` instead
   of through a PowerShell stdin pipe.
@@ -105,12 +109,15 @@ State:
 
 The first acceptance checkpoint is now an ordered workflow test:
 
-1. basic installation succeeds with no target selected;
-2. create and verify one new Forge model;
-3. convert one independently authored SolidCraft .sc checkpoint to Forge while
-   preserving the original under `reference/`;
-4. continue one existing Forge model from Git;
-5. prove owner-local `build/` scratch never appears as maintained Git source.
+1. basic installation succeeds with no target and without a CAD checkout;
+2. create the ignored `mcp-test` workbench and local `project.yml`;
+3. create a 60 × 20 × 4 mm plate with one centered Ø8 mm hole through Forge;
+4. apply it to the running SolidCraft GUI, inspect it, change one exposed
+   parameter natively, set a useful view and retrieve a live render;
+5. confirm `build/session.jsonl`, replay evidence and the render stay inside
+   the workbench;
+6. only after that continue with catalog-model, conversion and existing-model
+   acceptance.
 
 After that, record any proven template friction upstream in
 `brainboxemb/template.cad.mcp.workspace`.

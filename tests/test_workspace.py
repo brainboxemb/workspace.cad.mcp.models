@@ -78,6 +78,158 @@ def test_generate_opens_only_exact_target(monkeypatch, tmp_path):
     assert str((tmp_path / "ext" / "forge").resolve()) in args
 
 
+def test_create_workbench_uses_standalone_mcp_workspace(monkeypatch, tmp_path):
+    data = base_config()
+    local_path = tmp_path / "workspace.local.yml"
+    local_path.write_text(
+        "schema: 1\nsolidcraft:\n  cli: C:\\\\SolidCraft\\\\solidcraft-cli.exe\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "LOCAL_PATH", local_path)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace.sys, "executable", str(tmp_path / "python.exe"))
+
+    result = workspace.create_workbench("mcp-test")
+
+    owner = (tmp_path / ".workbench" / "mcp-test").resolve()
+    assert owner.is_dir()
+    assert result["workbench"] == "mcp-test"
+    assert result["project"] == "project.yml"
+    assert result["source_expected"] == "scpf/model.py"
+
+    project = yaml.safe_load((owner / "project.yml").read_text(encoding="utf-8"))
+    assert project == {
+        "schema": 1,
+        "forge": {"source": "scpf/model.py"},
+        "solidcraft": {"connect": "auto"},
+        "evidence": {
+            "enabled": True,
+            "log": "build/session.jsonl",
+            "render": "build/live/model.png",
+        },
+    }
+
+    local = yaml.safe_load(local_path.read_text(encoding="utf-8"))
+    assert local["target"] == {"workbench": "mcp-test"}
+
+    generated = tmp_path / ".generated"
+    code = json.loads(
+        (generated / "forge-cad.code-workspace").read_text(encoding="utf-8")
+    )
+    assert code["folders"] == [{"name": "mcp-test", "path": str(owner)}]
+
+    mcp = json.loads(
+        (generated / "mcp-config.json").read_text(encoding="utf-8")
+    )
+    args = mcp["mcpServers"]["forgeCad"]["args"]
+    assert "--workspace" in args
+    assert str(owner) in args
+    assert "--cad-library" not in args
+    assert "--model-root" not in args
+
+    state = json.loads((generated / "state.json").read_text(encoding="utf-8"))
+    assert state["target_kind"] == "workbench"
+    assert state["target"] == "workbench:mcp-test"
+    assert state["cad_repository"] is None
+
+
+def test_create_workbench_refuses_invalid_or_existing_name(monkeypatch, tmp_path):
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "LOCAL_PATH", tmp_path / "workspace.local.yml")
+    monkeypatch.setattr(workspace, "config", base_config)
+
+    with pytest.raises(workspace.WorkspaceError):
+        workspace.create_workbench("../escape")
+
+    workspace.create_workbench("mcp-test")
+    with pytest.raises(workspace.WorkspaceError, match="already exists"):
+        workspace.create_workbench("mcp-test")
+
+
+def test_bootstrap_without_target_does_not_touch_cad(monkeypatch, tmp_path):
+    data = base_config()
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace, "local_config", lambda required=False: {})
+    monkeypatch.setattr(workspace, "require_external_toolchain", lambda paths: None)
+    monkeypatch.setattr(workspace, "install_toolchain", lambda paths: None)
+    monkeypatch.setattr(
+        workspace,
+        "ensure_cad",
+        lambda *args, **kwargs: pytest.fail(
+            "bootstrap without a catalog target must not touch the CAD checkout"
+        ),
+    )
+
+    workspace.bootstrap()
+
+
+def test_workbench_bootstrap_and_update_do_not_touch_cad(monkeypatch, tmp_path):
+    data = base_config()
+    local = {
+        "schema": 1,
+        "target": {"workbench": "mcp-test"},
+        "solidcraft": {"cli": "solidcraft-cli"},
+    }
+    calls = []
+
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace, "local_config", lambda required=False: local)
+    monkeypatch.setattr(workspace, "require_external_toolchain", lambda paths: None)
+    monkeypatch.setattr(workspace, "install_toolchain", lambda paths: None)
+    monkeypatch.setattr(
+        workspace,
+        "ensure_cad",
+        lambda *args, **kwargs: pytest.fail(
+            "standalone workbench must not touch the CAD checkout"
+        ),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "generate",
+        lambda data, local: calls.append("generate") or {"target": "workbench:mcp-test"},
+    )
+
+    workspace.bootstrap()
+    workspace.update()
+
+    assert calls == ["generate", "generate"]
+
+
+def test_catalog_target_still_ensures_cad_checkout(monkeypatch, tmp_path):
+    data = base_config()
+    local = {
+        "schema": 1,
+        "target": {"model": "models/basic/part"},
+        "solidcraft": {"cli": "solidcraft-cli"},
+    }
+    calls = []
+
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace, "local_config", lambda required=False: local)
+    monkeypatch.setattr(workspace, "require_external_toolchain", lambda paths: None)
+    monkeypatch.setattr(workspace, "install_toolchain", lambda paths: None)
+    monkeypatch.setattr(
+        workspace,
+        "ensure_cad",
+        lambda data, path: calls.append(("cad", path)),
+    )
+    monkeypatch.setattr(
+        workspace,
+        "generate",
+        lambda data, local: calls.append(("generate", None)) or {"target": "models/basic/part"},
+    )
+
+    workspace.bootstrap()
+    workspace.update()
+
+    assert [kind for kind, _ in calls] == ["cad", "generate", "cad", "generate"]
+
+
 def test_missing_vcs2l_external_checkout_is_reported(monkeypatch, tmp_path):
     monkeypatch.setattr(workspace, "ROOT", tmp_path)
     paths = workspace.workspace_paths(base_config())
@@ -305,6 +457,12 @@ def test_local_machine_config_may_exist_without_target():
             "target": {"model": "models/basic/part"},
         }
     )
+    assert workspace.has_target(
+        {
+            "solidcraft": {"cli": "solidcraft-cli"},
+            "target": {"workbench": "mcp-test"},
+        }
+    )
 
 
 def test_pr_helper_uses_repository_merge_policy():
@@ -316,6 +474,13 @@ def test_pr_helper_uses_repository_merge_policy():
     assert '"pr", "merge"' not in script
 
 
+def test_local_workbench_directory_is_ignored():
+    ignore = (
+        Path(__file__).resolve().parents[1] / ".gitignore"
+    ).read_text(encoding="utf-8").splitlines()
+    assert ".workbench/" in ignore
+
+
 def test_toolchain_dependencies_use_qualified_release_tags():
     dependencies = yaml.safe_load(
         (Path(__file__).resolve().parents[1] / "dependencies.repos").read_text(
@@ -323,7 +488,7 @@ def test_toolchain_dependencies_use_qualified_release_tags():
         )
     )["repositories"]
 
-    assert dependencies["mcp"]["version"] == "v0.0.2"
+    assert dependencies["mcp"]["version"] == "v0.0.3"
     assert dependencies["forge"]["version"] == "v0.25.0"
     assert all(
         item["version"].startswith("v")

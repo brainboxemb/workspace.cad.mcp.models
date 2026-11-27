@@ -1,6 +1,11 @@
-# 02 — Create a new Forge model
+# Create a new Forge catalog model
 
-Use this when the model does not yet exist in the CAD catalog.
+Use this when the model does not yet exist in the CAD catalog and should become
+maintained repository source.
+
+For the first MCP test or disposable local experimentation, do **not** create a
+catalog branch/owner. Use [02 — Local MCP workbench](02-local-workbench.md)
+instead.
 
 The operator chooses the exact catalog path and creates the owner boundary. After that, the AI may author Forge Python only inside that selected owner.
 
