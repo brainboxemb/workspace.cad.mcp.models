@@ -33,6 +33,31 @@ def api(repository: str, path: str, token: str, *, method: str = "GET", body=Non
         raise MergePolicyError(f"GitHub API {exc.code}: {detail}") from exc
 
 
+def pull_request_paths(
+    repository: str,
+    pr_number: int,
+    changed_files: int,
+    token: str,
+) -> tuple[str, ...]:
+    paths = []
+    page = 1
+    while len(paths) < changed_files:
+        batch = api(
+            repository,
+            f"pulls/{pr_number}/files?per_page=100&page={page}",
+            token,
+        )
+        if not isinstance(batch, list) or not batch:
+            break
+        paths.extend(item["filename"] for item in batch)
+        page += 1
+    if len(paths) != changed_files:
+        raise MergePolicyError(
+            "could not read complete pull request file list"
+        )
+    return tuple(paths)
+
+
 def require_green_ci(repository: str, sha: str, pr_number: int, token: str) -> None:
     checks = api(repository, f"commits/{sha}/check-runs", token).get("check_runs", [])
     matches = [
@@ -78,7 +103,17 @@ def main() -> None:
     head = pr["head"]["ref"]
     base = pr["base"]["ref"]
     head_sha = pr["head"]["sha"]
-    method = merge_method(head=head, base=base)
+    paths = pull_request_paths(
+        args.repository,
+        args.pull_request_number,
+        pr["changed_files"],
+        token,
+    )
+    method = merge_method(
+        head=head,
+        base=base,
+        changed_paths=paths,
+    )
     require_green_ci(args.repository, head_sha, args.pull_request_number, token)
 
     result = api(
