@@ -46,6 +46,18 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 
 ## Active workstreams
 
+### WS0 — procedural manuals
+
+State:
+
+- owner/lane: workspace `dev`;
+- current status: issue #8 synchronizes the accepted procedural daily manual
+  and rewrites the concrete workspace developer manual as an ordered
+  maintenance procedure;
+- next concrete gate: merge the documentation update and keep local Windows
+  acceptance as the only remaining runtime gate;
+- blocker/external work: none.
+
 ### WS1 — first local Windows acceptance
 
 State:
@@ -63,7 +75,8 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #1 | local Windows acceptance | now | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
+| #8 | dev / documentation | now | Merge procedural manual synchronization |
+| #1 | local Windows acceptance | next | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
 
 ## Recently completed
 
