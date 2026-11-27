@@ -87,8 +87,9 @@ git clone https://github.com/brainboxemb/workspace.cad.mcp.models.git
 cd workspace.cad.mcp.models
 ~~~
 
-The committed `workspace.yml` identifies the CAD catalog. Exact MCP and Forge
-revisions are in `dependencies.repos`.
+The committed `workspace.yml` identifies the CAD catalog. The qualified
+toolchain is pinned by immutable release tags in `dependencies.repos`:
+Forge CAD MCP `v0.0.2` and Forge/SCPF `v0.25.0`.
 
 ## 5. Create local machine configuration
 
@@ -124,13 +125,20 @@ On the first run the script:
 3. updates that same environment from `environment.yml` on later bootstrap
    runs;
 4. installs Python, vcs2l and workspace dependencies in that environment;
-5. runs `vcs import --input dependencies.repos ext` in the same environment;
-6. materializes exact MCP and Forge checkouts under `ext/mcp` and
+5. validates the existing MCP/Forge checkouts against `dependencies.repos`;
+6. if they already match, keeps them in place; if the committed release tags
+   changed, rematerializes only the clean vcs2l-managed externals and then
+   validates them again;
+7. materializes exact MCP and Forge checkouts under `ext/mcp` and
    `ext/forge`;
-7. clones only the configured CAD development branch to `.repos/cad` when
+8. clones only the configured CAD development branch to `.repos/cad` when
    absent, using a blobless partial clone so historical file contents are only
    fetched if Git later needs them;
-8. installs Forge CAD MCP and SCPF into `cad-mcp-workspace`.
+9. installs Forge CAD MCP and SCPF into `cad-mcp-workspace`.
+
+Bootstrap never rewrites the CAD worktree. It also refuses to discard local
+changes or an unexpected origin below `ext/`; those conditions must be
+resolved explicitly rather than silently deleted.
 
 The two Conda levels are therefore:
 
@@ -163,7 +171,27 @@ ext/forge/
 
 Do not run `doctor.ps1` yet. Doctor validates an exact selected model.
 
-## 8. Continue
+## 8. Update an existing installation
+
+After pulling an accepted workspace/toolchain change, use the normal update
+path:
+
+~~~powershell
+git switch main
+git pull --ff-only
+.\scripts\update.ps1
+~~~
+
+`update.ps1` updates the same `cad-mcp-workspace` Conda environment,
+reconciles MCP and Forge to the exact release tags in `dependencies.repos`,
+reinstalls the local toolchain packages and regenerates client state when a
+target is selected.
+
+Do not manually delete `ext/` to adopt a new MCP or Forge release.
+`.repos/cad/` is the active CAD worktree and is never reset, pulled, cleaned
+or branch-switched by update.
+
+## 9. Continue
 
 For the first acceptance continue with
 [02 — Create a new Forge model](02-new-model.md).
