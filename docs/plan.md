@@ -63,7 +63,8 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #1 | local Windows acceptance | now | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
+| #19 | workspace `dev` | now | Synchronize the lightweight initial CAD clone from the template |
+| #1 | local Windows acceptance | after #19 | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
 
 ## Recently completed
 
