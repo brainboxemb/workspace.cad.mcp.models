@@ -287,3 +287,18 @@ def test_pr_helper_uses_repository_merge_policy():
     assert '"pr", "checks", "$PrNumber", "--watch", "--fail-fast"' in script
     assert '"pr", "comment", "$PrNumber", "--body", "/merge"' in script
     assert '"pr", "merge"' not in script
+
+
+def test_toolchain_dependencies_use_qualified_release_tags():
+    dependencies = yaml.safe_load(
+        (Path(__file__).resolve().parents[1] / "dependencies.repos").read_text(
+            encoding="utf-8"
+        )
+    )["repositories"]
+
+    assert dependencies["mcp"]["version"] == "v0.0.2"
+    assert dependencies["forge"]["version"] == "v0.25.0"
+    assert all(
+        item["version"].startswith("v")
+        for item in (dependencies["mcp"], dependencies["forge"])
+    )
