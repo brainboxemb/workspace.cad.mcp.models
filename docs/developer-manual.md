@@ -3,8 +3,7 @@
 Use this document when changing or maintaining
 `brainboxemb/workspace.cad.mcp.models` itself.
 
-For normal local use of the workspace, including first setup on a machine,
-bootstrap, model selection, doctor and VS Code startup, use `docs/manual.md`.
+For normal model work use the ordered procedures in `docs/manual/`: basic installation, new model, SolidCraft-to-Forge conversion and existing-model editing. `docs/manual.md` is only the entrypoint.
 
 This repository is a concrete consumer of
 `brainboxemb/template.cad.mcp.workspace`. Reusable workspace behavior should
