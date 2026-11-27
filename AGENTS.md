@@ -2,57 +2,78 @@
 
 ## Purpose
 
-This repository is the concrete Forge CAD MCP assistant workspace for
-`brainboxemb/2026-011-02.cad.solidcraft`.
-
-It owns only workspace configuration and local bootstrap/client-generation
-mechanics.
+This repository is a reusable template for local CAD MCP workspaces. It owns
+workspace/bootstrap behavior only.
 
 It does not own:
 
 - Forge Python API behavior: `brainboxemb/lib.py.solidcraft.forge`;
 - Forge CAD MCP behavior: `brainboxemb/tool.cad.mcp.forge`;
 - vcs2l upstream behavior;
-- CAD model source: `brainboxemb/2026-011-02.cad.solidcraft`;
-- reusable workspace architecture:
-  `brainboxemb/template.cad.mcp.workspace`;
+- CAD model source: the concrete CAD-library repository configured by a
+  workspace created from this template;
 - SolidCraft engine behavior.
 
 ## Start work
 
-1. inspect current issues, pull requests and branches;
-2. read `docs/plan.md`;
-3. read `docs/developer-manual.md`;
-4. read `docs/manual.md` for user-visible workflow;
-5. keep handoff/plan structure aligned with
+Before changing the template:
+
+1. read `docs/plan.md`;
+2. read `docs/developer-manual.md`;
+3. read `docs/manual.md` when changing user-visible workflow;
+4. keep `docs/plan.md` and `docs/handoff.md` structurally aligned with
    `brainboxemb/meta.cad.solidcraft/templates/docs/`;
-6. create a short-lived branch from `dev`;
+5. create a short-lived branch from `dev` for normal source/docs work;
+6. for stable control-doc-only work limited to `docs/plan.md` and/or
+   `docs/handoff.md`, create the short-lived branch from `main` instead;
 7. keep one logical change per issue/branch/PR;
-8. use `/merge` for every integration.
-
-## Dependency boundary
-
-MCP and Forge are externals declared only in `dependencies.repos` and
-materialized by vcs2l below `ext/`. vcs2l and the Forge MCP runtime run from
-the same dedicated `cad-mcp-workspace` Conda environment. Do not reimplement
-Git dependency management or introduce a second normal-use environment.
-
-The CAD checkout below `.repos/cad/` is the active worktree. Bootstrap may
-clone it when absent and verify origin when present, but must never pull,
-reset, clean or switch an existing CAD checkout.
-
-The exact target model owner is local configuration in
-`workspace.local.yml`. Never add fuzzy target discovery or implicit target
-switching.
+8. run the workspace unit tests.
 
 ## Branch model
 
-Permanent branches are `main` and `dev`.
+Permanent branches are only `main` and `dev`.
 
-- short-lived branch -> `dev`: squash through `/merge`;
-- `dev` -> `main`: merge commit through `/merge`;
+- short-lived branch -> `dev`: squash;
+- `dev` -> `main`: merge commit;
+- stable control-doc-only branch -> `main`: squash, only when the complete PR
+  changes `docs/plan.md` and/or `docs/handoff.md`;
 - `main` -> `dev`: merge commit only for stable-only content not already on
   dev.
 
-Model-development Git work belongs in the CAD repository, not this workspace
-repository.
+Every integration uses `/merge` and the repository-local merge-policy
+workflow. Never select merge/squash/rebase manually and never use direct GitHub
+merge as fallback.
+
+Merged temporary branches are cleanup candidates. `main` and `dev` never
+are.
+
+## Workspace safety
+
+MCP and Forge are external source dependencies. Their Git materialization is
+owned by vcs2l through committed `dependencies.repos`; do not reimplement
+clone/fetch/checkout/update logic for them in workspace Python.
+
+The CAD repository is different: it is the user's active worktree. Workspace
+bootstrap may clone it when absent and verify its origin when present, but must
+not reset, force-checkout, clean, pull or otherwise rewrite an existing CAD
+checkout.
+
+The exact target model owner is explicit local configuration. Never implement
+fuzzy model discovery or automatic target switching.
+
+Generated VS Code project context should expose the selected model owner as the
+normal folder. Do not expose the complete external toolchain or CAD catalog as
+ordinary assistant browse context.
+
+vcs2l externals stay below ignored `ext/`. The active CAD worktree stays below
+ignored `.repos/cad/`. Generated client files stay below ignored
+`.generated/`.
+
+## Bootstrap behavior
+
+Bootstrap uses one dedicated `cad-mcp-workspace` Conda environment. That
+environment contains vcs2l plus the MCP/runtime dependencies. Do not introduce a
+second environment or require environment switching for normal workspace use.
+
+Do not expose Git clone/update behavior as an MCP model-work tool. Repository
+management is an operator/workspace responsibility.
