@@ -23,7 +23,9 @@ catalog repository.
 - the active CAD worktree is local at `.repos/cad/` and is never
   pull/reset/clean/switch managed once it exists;
 - the active target is local in ignored `workspace.local.yml`;
-- generated client configuration lives below ignored `.generated/`.
+- generated client configuration lives below ignored `.generated/`;
+- bootstrap/update reconcile clean vcs2l-managed MCP/Forge externals to the
+  committed release tags automatically and never touch the CAD worktree.
 
 ## Lane rule
 
@@ -69,6 +71,9 @@ State:
 
 ## Recently completed
 
+- #29 synchronizes automatic MCP/Forge external reconciliation from the
+  workspace template, so normal upgrades use `git pull` +
+  `scripts/update.ps1` without manual `ext/` deletion.
 - #24 adopts the released MCP `v0.0.2` + Forge `v0.25.0` compatibility
   baseline from the workspace template, replacing opaque commit-SHA pins.
 - #21 synchronized the template PR helper. `scripts/pr.ps1` can publish either

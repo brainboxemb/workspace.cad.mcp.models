@@ -64,6 +64,13 @@ large generated or historical blobs from unrelated refs from being transferred
 during initial setup. After the checkout exists, workspace maintenance only
 validates its origin and never changes its branch or worktree state.
 
+MCP and Forge are different: they are disposable vcs2l-managed externals below
+`ext/`. Bootstrap and update validate them against `dependencies.repos`.
+When a committed release tag changes, the workspace rematerializes the clean
+external set through vcs2l. It must never require the operator to manually
+delete `ext/`, and it must refuse to discard local external changes or an
+unexpected repository origin.
+
 ### 4. Publish through the repository policy
 
 Install and authenticate GitHub CLI once:
@@ -116,8 +123,10 @@ When changing a revision:
 4. run the local workspace acceptance affected by the version change;
 5. only then publish the accepted dependency pair.
 
-`scripts/update.ps1` never chooses a newer revision by itself. It materializes
-exactly what `dependencies.repos` declares.
+`scripts/update.ps1` never chooses a newer revision by itself. It reconciles
+the existing MCP/Forge externals to exactly what `dependencies.repos`
+declares. Matching checkouts remain in place; clean stale checkouts are
+rematerialized through vcs2l. The CAD checkout is not part of this operation.
 
 ## Change the workspace Conda environment
 
