@@ -14,7 +14,7 @@ catalog repository.
 - normal source integration uses the repository-local `/merge` policy;
 - MCP and Forge are exact released externals declared in `dependencies.repos`
   and materialized with vcs2l under `ext/`;
-- the accepted toolchain pins are Forge CAD MCP `v0.0.7` and Forge
+- the accepted toolchain pins are Forge CAD MCP `v0.0.8` and Forge
   `v0.25.0`, with SolidCraft 0.50.0 / CAD runtime v0.3.8 live GUI control plus
   headless evidence;
 - one dedicated `cad-mcp-workspace` Conda environment contains vcs2l and the
@@ -60,8 +60,8 @@ State:
 
 - owner/lane: local Windows consumer + workspace `dev`;
 - current status: stable `main` contains the standalone Codex MCP
-  boundary/task router and pins MCP v0.0.7 with the real new-model
-  `forge-modeling` skill;
+  boundary/task router and the MCP v0.0.8 `forge-modeling` authoring-contract
+  and generic-idiom correction;
 - next concrete gate: pull/update the real Windows workspace, regenerate the
   existing `mcp-test` workbench policy and resume the documented
   60 × 20 × 4 mm / Ø8 live SolidCraft demo;
@@ -71,6 +71,7 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
+| #67 | workspace `main` | complete | MCP v0.0.8 authoring-contract/Hole-semantics patch adopted |
 | #58 | workspace `main` | complete | MCP v0.0.7 new-model skill published to stable main |
 | #56 | workspace `dev` | complete | Standalone Codex MCP boundary and task-to-skill router synchronized |
 | #53 | workspace `dev` | complete | MCP v0.0.6 fast-knowledge patch published to stable main |
@@ -78,10 +79,11 @@ State:
 | #47 | workspace `dev` | complete | Project-local Codex MCP config published to stable main |
 | #44 | workspace `dev` | complete | Shallow exact-tag MCP/Forge externals published and proven on Windows |
 | #41 | workspace `dev` | complete | MCP v0.0.4 / SolidCraft 0.50.0 baseline published to stable main |
-| #1 | local Windows acceptance | now | Resume the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows with stable MCP v0.0.7 |
+| #1 | local Windows acceptance | now | Resume the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows with stable MCP v0.0.8 |
 
 ## Recently completed
 
+- #67 adopts MCP `v0.0.8`: `forge-modeling` keeps the minimal `scpf/model.py` contract, adds only generic Forge idioms, and fixes native `Hole` composition to use `+`.
 - #58 adopted MCP `v0.0.7`, whose `forge-modeling` skill now teaches and CI-compiles the minimal `scpf/model.py` contract.
 - #56 synchronizes the generated standalone `AGENTS.md` boundary and routes new modeling, live control and native conversion through the matching `forgeCad` skills.
 - #53 adopted MCP `v0.0.6`, removing per-call Git validation from Forge knowledge/reference reads and compile.
