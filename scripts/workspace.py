@@ -21,6 +21,7 @@ CONFIG_PATH = ROOT / "workspace.yml"
 LOCAL_PATH = ROOT / "workspace.local.yml"
 MODEL_SECTIONS = frozenset({"basic", "components", "subassemblies", "assemblies"})
 MODEL_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+WORKBENCH_DIR = ".workbench"
 
 
 def _yaml(path: Path, *, required: bool = True) -> dict:
@@ -51,7 +52,9 @@ def local_config(*, required: bool = False) -> dict:
 
 def has_target(local: dict) -> bool:
     target = local.get("target")
-    return isinstance(target, dict) and bool(target.get("model"))
+    return isinstance(target, dict) and bool(
+        target.get("model") or target.get("workbench")
+    )
 
 
 def _path(value: str) -> Path:
@@ -176,6 +179,18 @@ def model_relative(value: str) -> Path:
     return path
 
 
+def workbench_name(value: str) -> str:
+    if not isinstance(value, str) or not MODEL_ID_RE.fullmatch(value):
+        raise WorkspaceError(
+            "workbench name must contain lowercase letters, digits and hyphens"
+        )
+    return value
+
+
+def workbench_root(name: str) -> Path:
+    return (ROOT / WORKBENCH_DIR / workbench_name(name)).resolve()
+
+
 def new_model_relative(value: str) -> Path:
     path = model_relative(value)
     if len(path.parts) != 3 or path.parts[1] not in MODEL_SECTIONS:
@@ -295,11 +310,87 @@ def create_model(
     }
 
 
+def create_workbench(name: str) -> dict:
+    data = config()
+    normalized = workbench_name(name)
+    owner = workbench_root(normalized)
+    if owner.exists():
+        raise WorkspaceError("local workbench already exists")
+    owner.mkdir(parents=True)
+
+    existing = local_config(required=False)
+    cli = None
+    if isinstance(existing.get("solidcraft"), dict):
+        cli = existing["solidcraft"].get("cli")
+    payload = {
+        "schema": 1,
+        "target": {"workbench": normalized},
+        "solidcraft": {"cli": cli or "solidcraft-cli"},
+    }
+    LOCAL_PATH.write_text(
+        yaml.safe_dump(payload, sort_keys=False),
+        encoding="utf-8",
+    )
+    state = generate(data, payload)
+    return {
+        "created": True,
+        "workbench": normalized,
+        "root": str(owner),
+        "source_expected": "scpf/model.py",
+        "state": state,
+    }
+
+
+def target_binding(
+    data: dict,
+    local: dict,
+    paths: dict[str, Path],
+) -> dict:
+    target = local.get("target")
+    if not isinstance(target, dict):
+        raise WorkspaceError("workspace.local.yml missing target mapping")
+    model = target.get("model")
+    workbench = target.get("workbench")
+    if bool(model) == bool(workbench):
+        raise WorkspaceError(
+            "target must contain exactly one of model or workbench"
+        )
+
+    if model:
+        relative, owner = target_owner(data, local, paths["cad"])
+        return {
+            "kind": "catalog",
+            "name": relative.name,
+            "root": owner,
+            "target": relative.as_posix(),
+            "server_args": [
+                "--cad-library",
+                str(paths["cad"].resolve()),
+                "--model-root",
+                relative.as_posix(),
+            ],
+        }
+
+    normalized = workbench_name(workbench)
+    owner = workbench_root(normalized)
+    if not owner.is_dir():
+        raise WorkspaceError(
+            "target.workbench must identify an existing local workbench"
+        )
+    return {
+        "kind": "workbench",
+        "name": normalized,
+        "root": owner,
+        "target": f"workbench:{normalized}",
+        "server_args": ["--workspace", str(owner)],
+    }
+
+
 def import_reference(source: str, name: str | None = None) -> dict:
     data = config()
     local = local_config(required=True)
     paths = workspace_paths(data)
-    _, owner = target_owner(data, local, paths["cad"])
+    owner = target_binding(data, local, paths)["root"]
 
     source_path = Path(source).expanduser().resolve()
     if not source_path.is_file() or source_path.suffix.lower() != ".sc":
@@ -370,7 +461,8 @@ def solidcraft_cli(local: dict) -> str:
 
 def generate(data: dict, local: dict) -> dict:
     paths = workspace_paths(data)
-    relative, owner = target_owner(data, local, paths["cad"])
+    binding = target_binding(data, local, paths)
+    owner = binding["root"]
     cli = solidcraft_cli(local)
     generated = paths["generated"]
     generated.mkdir(parents=True, exist_ok=True)
@@ -379,10 +471,7 @@ def generate(data: dict, local: dict) -> dict:
     args = [
         "-m",
         "forge_mcp.server",
-        "--cad-library",
-        str(paths["cad"].resolve()),
-        "--model-root",
-        relative.as_posix(),
+        *binding["server_args"],
         "--forge-source",
         str(paths["forge"].resolve()),
         "--solidcraft-cli",
@@ -403,7 +492,7 @@ def generate(data: dict, local: dict) -> dict:
     )
 
     code_workspace = {
-        "folders": [{"name": relative.name, "path": str(owner)}],
+        "folders": [{"name": binding["name"], "path": str(owner)}],
         "settings": {},
     }
     (generated / "forge-cad.code-workspace").write_text(
@@ -412,8 +501,14 @@ def generate(data: dict, local: dict) -> dict:
 
     state = {
         "workspace_id": data["workspace"].get("id"),
-        "target": relative.as_posix(),
-        "cad_repository": str(paths["cad"].resolve()),
+        "target_kind": binding["kind"],
+        "target": binding["target"],
+        "target_root": str(owner),
+        "cad_repository": (
+            str(paths["cad"].resolve())
+            if binding["kind"] == "catalog"
+            else None
+        ),
         "forge_repository": str(paths["forge"].resolve()),
         "mcp_repository": str(paths["mcp"].resolve()),
         "python": command,
@@ -469,17 +564,14 @@ def doctor() -> None:
     local = local_config(required=True)
     paths = workspace_paths(data)
     require_external_toolchain(paths)
-    relative, _ = target_owner(data, local, paths["cad"])
+    binding = target_binding(data, local, paths)
     cli = solidcraft_cli(local)
     run([
         sys.executable,
         "-m",
         "forge_mcp.server",
         "doctor",
-        "--cad-library",
-        str(paths["cad"].resolve()),
-        "--model-root",
-        relative.as_posix(),
+        *binding["server_args"],
         "--forge-source",
         str(paths["forge"].resolve()),
         "--solidcraft-cli",
@@ -528,6 +620,8 @@ def main() -> None:
     create_parser.add_argument("--id", required=True)
     create_parser.add_argument("--title", required=True)
     create_parser.add_argument("--priority", type=int, default=100)
+    workbench_parser = sub.add_parser("create-workbench")
+    workbench_parser.add_argument("--name", required=True)
     reference_parser = sub.add_parser("import-reference")
     reference_parser.add_argument("--source", required=True)
     reference_parser.add_argument("--name")
@@ -543,6 +637,8 @@ def main() -> None:
             select(args.model)
         elif args.command == "create-model":
             print(json.dumps(create_model(args.model, args.id, args.title, args.priority), indent=2))
+        elif args.command == "create-workbench":
+            print(json.dumps(create_workbench(args.name), indent=2))
         else:
             print(json.dumps(import_reference(args.source, args.name), indent=2))
     except WorkspaceError as exc:
