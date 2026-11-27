@@ -20,6 +20,7 @@ This creates:
 ~~~text
 .workbench/mcp-test/
 ├── project.yml
+├── AGENTS.md
 └── .codex/
     └── config.toml
 ~~~
@@ -27,6 +28,13 @@ This creates:
 The `.codex/config.toml` file binds the Codex IDE extension directly to the
 same Forge CAD MCP stdio command used by the workspace. A separately installed
 global `codex` CLI is not required for the normal VS Code workbench flow.
+
+The generated `AGENTS.md` keeps CAD authoring behind the intended MCP
+boundary. Forge API/docs/examples and SolidCraft command knowledge must be read
+through `forgeCad`; Codex must not inspect `ext/forge` directly or use
+GitHub/web search as an implicit fallback. Repository or external research is
+still allowed when the user explicitly asks for it. `update.ps1` regenerates
+this local policy for an existing standalone workbench.
 
 and writes the local target to `workspace.local.yml`.
 

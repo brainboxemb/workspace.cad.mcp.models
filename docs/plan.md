@@ -71,7 +71,9 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #53 | workspace `dev` | now | Adopt released MCP v0.0.6 fast-knowledge patch for Windows Codex acceptance |\n| #50 | workspace `dev` | complete | MCP v0.0.5 fast-status patch published to stable main |
+| #56 | workspace `dev` | now | Sync standalone Codex policy that keeps Forge/SolidCraft knowledge behind MCP |
+| #53 | workspace `dev` | complete | MCP v0.0.6 fast-knowledge patch published to stable main |
+| #50 | workspace `dev` | complete | MCP v0.0.5 fast-status patch published to stable main |
 | #47 | workspace `dev` | complete | Project-local Codex MCP config published to stable main |
 | #44 | workspace `dev` | complete | Shallow exact-tag MCP/Forge externals published and proven on Windows |
 | #41 | workspace `dev` | complete | MCP v0.0.4 / SolidCraft 0.50.0 baseline published to stable main |
@@ -79,6 +81,7 @@ State:
 
 ## Recently completed
 
+- #53 adopted MCP `v0.0.6`, removing per-call Git validation from Forge knowledge/reference reads and compile.
 - #47 synchronizes project-local `.codex/config.toml` generation for standalone
   workbenches so Codex IDE can discover `forgeCad` without a global Codex CLI.
 - #44 replaced full-history MCP/Forge externals with shallow exact-tag
