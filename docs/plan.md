@@ -59,29 +59,30 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 State:
 
 - owner/lane: local Windows consumer + workspace `dev`;
-- current status: source configuration is aligned with the current
-  template/vcs2l baseline and permanent `dev` CI is green; local Windows
-  acceptance remains;
-- next concrete gate: pull this workspace on Windows, update to MCP v0.0.7,
-  create `mcp-test` without a CAD checkout, run doctor and complete the
-  documented 60 × 20 × 4 mm / Ø8 live SolidCraft demo;
-- blocker/external work: the real Windows GUI acceptance still has to be run.
+- current status: stable `main` contains the standalone Codex MCP
+  boundary/task router and pins MCP v0.0.7 with the real new-model
+  `forge-modeling` skill;
+- next concrete gate: pull/update the real Windows workspace, regenerate the
+  existing `mcp-test` workbench policy and resume the documented
+  60 × 20 × 4 mm / Ø8 live SolidCraft demo;
+- blocker/external work: the live GUI acceptance is the remaining checkpoint.
 
 ## Open issue assignment
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #58 | workspace `dev` | now | Adopt released MCP v0.0.7 new-model skill for Windows Codex acceptance |
+| #58 | workspace `main` | complete | MCP v0.0.7 new-model skill published to stable main |
 | #56 | workspace `dev` | complete | Standalone Codex MCP boundary and task-to-skill router synchronized |
 | #53 | workspace `dev` | complete | MCP v0.0.6 fast-knowledge patch published to stable main |
 | #50 | workspace `dev` | complete | MCP v0.0.5 fast-status patch published to stable main |
 | #47 | workspace `dev` | complete | Project-local Codex MCP config published to stable main |
 | #44 | workspace `dev` | complete | Shallow exact-tag MCP/Forge externals published and proven on Windows |
 | #41 | workspace `dev` | complete | MCP v0.0.4 / SolidCraft 0.50.0 baseline published to stable main |
-| #1 | local Windows acceptance | next | Run the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows |
+| #1 | local Windows acceptance | now | Resume the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows with stable MCP v0.0.7 |
 
 ## Recently completed
 
+- #58 adopted MCP `v0.0.7`, whose `forge-modeling` skill now teaches and CI-compiles the minimal `scpf/model.py` contract.
 - #56 synchronizes the generated standalone `AGENTS.md` boundary and routes new modeling, live control and native conversion through the matching `forgeCad` skills.
 - #53 adopted MCP `v0.0.6`, removing per-call Git validation from Forge knowledge/reference reads and compile.
 - #47 synchronizes project-local `.codex/config.toml` generation for standalone
