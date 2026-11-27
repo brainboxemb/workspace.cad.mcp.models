@@ -17,7 +17,10 @@ workspace.cad.mcp.models/
 │   ├── mcp/
 │   └── forge/
 ├── .repos/
-│   └── cad/                   # active CAD worktree, ignored
+│   └── cad/                   # optional catalog worktree, ignored
+├── .workbench/                # local standalone MCP experiments, ignored
+│   └── <name>/
+│       └── project.yml        # local Forge/SolidCraft/evidence settings
 └── .generated/
     ├── forge-cad.code-workspace
     ├── mcp-config.json
@@ -30,21 +33,28 @@ Bootstrap creates or updates it once and all workspace commands use that same
 environment.
 
 The CAD repository is different from an external dependency: it is the active
-worktree where model branches and edits live. Workspace maintenance may clone it
-when absent, but never pulls, resets, cleans or branch-switches an existing CAD
-checkout.
+worktree where catalog-model branches and edits live. A basic installation or
+standalone workbench does not require it. The workspace creates it only when a
+catalog-model target is used, and never pulls, resets, cleans or branch-switches
+an existing CAD checkout.
 
 ## First local run
 
 ```powershell
 Copy-Item workspace.local.example.yml workspace.local.yml
-# Edit target.model and solidcraft.cli
+# Edit only solidcraft.cli
 .\scripts\bootstrap.ps1
+.\scripts\create-workbench.ps1 -Name mcp-test
 .\scripts\doctor.ps1
 ```
 
-Then open `.generated/forge-cad.code-workspace` and configure the VS Code
-Copilot harness from `.generated/mcp-config.json`.
+This first run does not need `.repos/cad`. Start SolidCraft, enable
+**Preferences → Assistant → Agents through MCP → Let AI agents connect**, then
+open `.generated/forge-cad.code-workspace`.
+
+The first acceptance model is a 60 × 20 × 4 mm plate with one centered Ø8 mm
+hole. The detailed live Forge/SolidCraft procedure is in
+`docs/manual/02-local-workbench.md`.
 
 See [docs/manual.md](docs/manual.md) for daily use and
 [docs/developer-manual.md](docs/developer-manual.md) for workspace maintenance.
