@@ -15,7 +15,7 @@ def base_config():
         "repositories": {
             "cad": {"url": "https://github.com/example/cad.git", "branch": "dev"},
         },
-        "solidcraft": {"version": "0.49.0"},
+        "solidcraft": {"version": "0.50.0"},
         "paths": {
             "externals": "ext",
             "cad": ".repos/cad",
@@ -488,7 +488,7 @@ def test_toolchain_dependencies_use_qualified_release_tags():
         )
     )["repositories"]
 
-    assert dependencies["mcp"]["version"] == "v0.0.3"
+    assert dependencies["mcp"]["version"] == "v0.0.4"
     assert dependencies["forge"]["version"] == "v0.25.0"
     assert all(
         item["version"].startswith("v")
