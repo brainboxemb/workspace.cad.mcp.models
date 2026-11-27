@@ -488,6 +488,29 @@ def solidcraft_cli(local: dict) -> str:
     return str(solidcraft["cli"])
 
 
+def _toml_string(value: str) -> str:
+    return json.dumps(value, ensure_ascii=False)
+
+
+def write_codex_workbench_config(
+    owner: Path,
+    command: str,
+    args: list[str],
+) -> Path:
+    config_dir = owner / ".codex"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config_path = config_dir / "config.toml"
+    content = (
+        "[mcp_servers.forgeCad]\n"
+        f"command = {_toml_string(command)}\n"
+        "args = [\n"
+        + "".join(f"  {_toml_string(arg)},\n" for arg in args)
+        + "]\n"
+    )
+    config_path.write_text(content, encoding="utf-8")
+    return config_path
+
+
 def generate(data: dict, local: dict) -> dict:
     paths = workspace_paths(data)
     binding = target_binding(data, local, paths)
@@ -520,9 +543,15 @@ def generate(data: dict, local: dict) -> dict:
         json.dumps(mcp, indent=2) + "\n", encoding="utf-8"
     )
 
+    codex_config = None
+    if binding["kind"] == "workbench":
+        codex_config = write_codex_workbench_config(owner, command, args)
+
     code_workspace = {
         "folders": [{"name": binding["name"], "path": str(owner)}],
-        "settings": {},
+        "settings": {
+            "python.defaultInterpreterPath": command,
+        },
     }
     (generated / "forge-cad.code-workspace").write_text(
         json.dumps(code_workspace, indent=2) + "\n", encoding="utf-8"
@@ -542,6 +571,7 @@ def generate(data: dict, local: dict) -> dict:
         "mcp_repository": str(paths["mcp"].resolve()),
         "python": command,
         "solidcraft_cli": cli,
+        "codex_config": str(codex_config) if codex_config is not None else None,
     }
     (generated / "state.json").write_text(
         json.dumps(state, indent=2) + "\n", encoding="utf-8"
