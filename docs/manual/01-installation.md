@@ -3,8 +3,9 @@
 Use this once on a Windows machine before choosing a model workflow.
 
 This procedure starts from a machine that may not have Conda installed yet. It
-installs the machine-level Conda distribution, installs the workspace toolchain
-and clones the CAD catalog. It does not select a model.
+installs the machine-level Conda distribution and the workspace toolchain. It
+does not select a target and does not clone the CAD catalog unless a later
+catalog-model workflow actually needs it.
 
 ## 1. Check Git
 
@@ -89,7 +90,7 @@ cd workspace.cad.mcp.models
 
 The committed `workspace.yml` identifies the CAD catalog. The qualified
 toolchain is pinned by immutable release tags in `dependencies.repos`:
-Forge CAD MCP `v0.0.2` and Forge/SCPF `v0.25.0`.
+Forge CAD MCP `v0.0.3` and Forge/SCPF `v0.25.0`.
 
 ## 5. Create local machine configuration
 
@@ -131,10 +132,11 @@ On the first run the script:
    validates them again;
 7. materializes exact MCP and Forge checkouts under `ext/mcp` and
    `ext/forge`;
-8. clones only the configured CAD development branch to `.repos/cad` when
-   absent, using a blobless partial clone so historical file contents are only
-   fetched if Git later needs them;
-9. installs Forge CAD MCP and SCPF into `cad-mcp-workspace`.
+8. installs Forge CAD MCP and SCPF into `cad-mcp-workspace`.
+
+With no target selected, or with a standalone workbench selected, bootstrap
+does **not** clone or require `.repos/cad`. The CAD catalog is materialized
+only when a catalog-model target is actually used.
 
 Bootstrap never rewrites the CAD worktree. It also refuses to discard local
 changes or an unexpected origin below `ext/`; those conditions must be
@@ -166,10 +168,12 @@ Verify these folders exist:
 ~~~text
 ext/mcp/
 ext/forge/
-.repos/cad/
 ~~~
 
-Do not run `doctor.ps1` yet. Doctor validates an exact selected model.
+`.repos/cad/` may correctly be absent at this point. It is not required for
+the standalone workbench.
+
+Do not run `doctor.ps1` yet. Doctor validates an exact selected target.
 
 ## 8. Update an existing installation
 
@@ -188,10 +192,11 @@ reinstalls the local toolchain packages and regenerates client state when a
 target is selected.
 
 Do not manually delete `ext/` to adopt a new MCP or Forge release.
-`.repos/cad/` is the active CAD worktree and is never reset, pulled, cleaned
-or branch-switched by update.
+`.repos/cad/`, when present for catalog work, is the active CAD worktree and
+is never reset, pulled, cleaned or branch-switched by update. Workbench/no-target
+updates do not require or create it.
 
 ## 9. Continue
 
 For the first acceptance continue with
-[02 — Create a new Forge model](02-new-model.md).
+[02 — Local MCP workbench](02-local-workbench.md).
