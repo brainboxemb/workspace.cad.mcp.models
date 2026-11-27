@@ -141,6 +141,33 @@ def test_template_requires_concrete_cad_url(tmp_path):
         workspace.ensure_cad(data, tmp_path / "cad")
 
 
+def test_pinned_mcp_is_installed_non_editable(monkeypatch, tmp_path):
+    paths = {
+        "mcp": tmp_path / "ext" / "mcp",
+        "forge": tmp_path / "ext" / "forge",
+    }
+    calls = []
+
+    monkeypatch.setattr(workspace, "require_external_toolchain", lambda paths: None)
+    monkeypatch.setattr(
+        workspace,
+        "run",
+        lambda args, **kwargs: calls.append(args) or "",
+    )
+
+    workspace.install_toolchain(paths)
+
+    assert calls[0] == [
+        workspace.sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        str(paths["mcp"]),
+    ]
+    assert "-e" not in calls[0]
+
+
 def test_environment_contains_vcs2l():
     data = yaml.safe_load(
         (Path(__file__).resolve().parents[1] / "environment.yml").read_text(
@@ -287,3 +314,18 @@ def test_pr_helper_uses_repository_merge_policy():
     assert '"pr", "checks", "$PrNumber", "--watch", "--fail-fast"' in script
     assert '"pr", "comment", "$PrNumber", "--body", "/merge"' in script
     assert '"pr", "merge"' not in script
+
+
+def test_toolchain_dependencies_use_qualified_release_tags():
+    dependencies = yaml.safe_load(
+        (Path(__file__).resolve().parents[1] / "dependencies.repos").read_text(
+            encoding="utf-8"
+        )
+    )["repositories"]
+
+    assert dependencies["mcp"]["version"] == "v0.0.2"
+    assert dependencies["forge"]["version"] == "v0.25.0"
+    assert all(
+        item["version"].startswith("v")
+        for item in (dependencies["mcp"], dependencies["forge"])
+    )
