@@ -90,7 +90,7 @@ cd workspace.cad.mcp.models
 
 The committed `workspace.yml` identifies the CAD catalog. The qualified
 toolchain is pinned by immutable release tags in `dependencies.repos`:
-Forge CAD MCP `v0.0.4` and Forge/SCPF `v0.25.0`.
+Forge CAD MCP `v0.0.5` and Forge/SCPF `v0.25.0`.
 
 ## 5. Create local machine configuration
 
