@@ -14,8 +14,8 @@ catalog repository.
 - normal source integration uses the repository-local `/merge` policy;
 - MCP and Forge are exact externals declared in `dependencies.repos` and
   materialized with vcs2l under `ext/`;
-- vcs2l/shared developer tooling is owned by
-  `brainboxemb/tool.py-dev-env`;
+- one dedicated `cad-mcp-workspace` Conda environment contains vcs2l and the
+  Forge MCP/runtime dependencies;
 - the CAD catalog is configured as
   `brainboxemb/2026-011-02.cad.solidcraft` with initial branch `dev`;
 - the active CAD worktree is local at `.repos/cad/` and is never
@@ -57,8 +57,7 @@ State:
 - next concrete gate: clone this workspace locally, create
   `workspace.local.yml`, run vcs2l/bootstrap + doctor, open the generated VS
   Code workspace and complete real MCP `environment` + `skill_list` calls;
-- blocker/external work: requires the local SolidCraft CLI path and the shared
-  `brainboxemb-dev-tools` vcs2l environment.
+- blocker/external work: requires the local SolidCraft CLI path.
 
 ## Open issue assignment
 
@@ -68,6 +67,9 @@ State:
 
 ## Recently completed
 
+- #5 adopts the template's single Conda environment model: vcs2l and the Forge
+  MCP/runtime both run in `cad-mcp-workspace`; no environment switching is
+  part of the normal workflow.
 - Workspace source is synchronized with the accepted template/vcs2l baseline,
   configured for `brainboxemb/2026-011-02.cad.solidcraft`, and green on
   permanent `dev` CI.

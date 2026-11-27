@@ -21,23 +21,20 @@ Local and ignored:
 
 Do not edit files below `.generated/` manually.
 
-## Prerequisite: vcs2l
+## Conda environment
 
-The shared developer-tools environment owns vcs2l:
+This workspace uses one dedicated Conda environment:
 
 ```text
-brainboxemb/tool.py-dev-env
-  -> Conda environment brainboxemb-dev-tools
-  -> vcs2l
+cad-mcp-workspace
+  ├── vcs2l
+  ├── Forge CAD MCP runtime
+  └── workspace Python dependencies
 ```
 
-Bootstrap first tries a `vcs` executable already available in the current
-shell. Otherwise it runs `vcs` through the shared
-`brainboxemb-dev-tools` Conda environment.
-
-If neither is available, install/update `brainboxemb-dev-tools` using
-`brainboxemb/tool.py-dev-env`. vcs2l does not belong in this workspace's
-project-specific Conda environment.
+`bootstrap.ps1` creates this environment once from `environment.yml` or
+updates it when the committed environment definition changes. There is no
+normal workflow that switches to a second developer-tools environment.
 
 ## First local setup
 
@@ -52,10 +49,11 @@ Copy-Item workspace.local.example.yml workspace.local.yml
 
 Bootstrap:
 
-1. runs `vcs import --input dependencies.repos ext`;
-2. creates/updates the dedicated project Conda environment;
+1. creates/updates `cad-mcp-workspace` from `environment.yml`;
+2. runs `vcs import --input dependencies.repos ext` in that environment;
 3. clones the configured CAD repository only when `.repos/cad` is absent;
-4. installs the MCP and SCPF packages from `ext/mcp` and `ext/forge`;
+4. installs the MCP and SCPF packages from `ext/mcp` and `ext/forge` in the
+   same environment;
 5. generates target-specific client files.
 
 An existing CAD checkout is never reset, cleaned, switched or pulled by
@@ -124,10 +122,10 @@ Run:
 .\scripts\doctor.ps1
 ```
 
-If bootstrap cannot find `vcs`, verify the shared developer-tools environment:
+To verify vcs2l in the workspace environment:
 
 ```powershell
-conda run --no-capture-output --name brainboxemb-dev-tools vcs --help
+conda run --no-capture-output --name cad-mcp-workspace vcs --help
 ```
 
 If `ext/mcp` or `ext/forge` is missing, rerun

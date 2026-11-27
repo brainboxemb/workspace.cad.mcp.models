@@ -17,17 +17,22 @@ Reusable workspace behavior should be fixed in
 
 ## External dependencies
 
-`dependencies.repos` declares MCP and Forge. The shared vcs2l installation is
-provided by `brainboxemb/tool.py-dev-env`.
+`dependencies.repos` declares MCP and Forge. vcs2l is pinned in the same
+`cad-mcp-workspace` Conda environment that runs the MCP.
 
 ```text
+cad-mcp-workspace
+    ├── vcs2l
+    └── Forge CAD MCP runtime
+
 dependencies.repos
     -> vcs import --input dependencies.repos ext
     -> ext/mcp
     -> ext/forge
 ```
 
-Do not replace this with custom clone/fetch/checkout code.
+Do not replace this with custom clone/fetch/checkout code or a second
+normal-use Conda environment.
 
 ## Active CAD worktree
 
