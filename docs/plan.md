@@ -51,8 +51,9 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 State:
 
 - owner/lane: local Windows consumer + workspace `dev`;
-- current status: source configuration is being aligned with the current
-  template/vcs2l baseline;
+- current status: source configuration is aligned with the current
+  template/vcs2l baseline and permanent `dev` CI is green; local Windows
+  acceptance remains;
 - next concrete gate: clone this workspace locally, create
   `workspace.local.yml`, run vcs2l/bootstrap + doctor, open the generated VS
   Code workspace and complete real MCP `environment` + `skill_list` calls;
@@ -63,11 +64,13 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #1 | dev / local acceptance | now | Merge source alignment, then perform Windows bootstrap, doctor and real MCP calls |
+| #1 | local Windows acceptance | now | Perform vcs2l/bootstrap, doctor and real VS Code MCP calls |
 
 ## Recently completed
 
-No completed workspace-specific checkpoint yet.
+- Workspace source is synchronized with the accepted template/vcs2l baseline,
+  configured for `brainboxemb/2026-011-02.cad.solidcraft`, and green on
+  permanent `dev` CI.
 
 ## Next release/checkpoint
 
