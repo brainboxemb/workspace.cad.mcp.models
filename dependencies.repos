@@ -1,0 +1,12 @@
+# vcs2l: exact external toolchain revisions used by this workspace template.
+# Update these revisions only together with the MCP/Forge compatibility contract.
+repositories:
+  mcp:
+    type: git
+    url: https://github.com/brainboxemb/tool.cad.mcp.forge.git
+    version: a51814529763b176cb963f84b10d72e1838cb8bb
+
+  forge:
+    type: git
+    url: https://github.com/brainboxemb/lib.py.solidcraft.forge.git
+    version: ce9cd4439efe51edc360b7bfffb77b950e218d32

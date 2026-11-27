@@ -1,39 +1,52 @@
-# template.cad.mcp.workspace
+# workspace.cad.mcp.models
 
-Reusable local workspace template for a Forge CAD assistant environment.
+Concrete local Forge CAD MCP assistant workspace for
+`brainboxemb/2026-011-02.cad.solidcraft`.
 
-A repository created from this template does **not** own CAD models, Forge or
-the MCP implementation. It coordinates local checkouts of those repositories,
-creates the Conda environment, generates the VS Code/Copilot MCP configuration
-and binds one exact CAD model owner as the assistant target.
+This repository owns workspace configuration only. It does not own CAD model
+source, Forge, the Forge MCP server, vcs2l or SolidCraft.
 
-Typical concrete repository:
-
-```text
-template.cad.mcp.workspace
-        ↓ use template
-workspace.cad.mcp.models
-```
-
-Local generated state:
+Local layout after bootstrap:
 
 ```text
 workspace.cad.mcp.models/
-├── workspace.yml
-├── workspace.local.yml       # local, ignored
-├── .repos/                   # managed/local checkouts, ignored
+├── dependencies.repos         # exact MCP + Forge vcs2l pins
+├── workspace.yml              # this workspace + CAD catalog config
+├── workspace.local.yml        # local target, ignored
+├── ext/                       # vcs2l externals, ignored
 │   ├── mcp/
-│   ├── forge/
-│   └── cad/
-└── .generated/               # generated client files, ignored
+│   └── forge/
+├── .repos/
+│   └── cad/                   # active CAD worktree, ignored
+└── .generated/
     ├── forge-cad.code-workspace
     ├── mcp-config.json
     └── state.json
 ```
 
-Start with [docs/developer-manual.md](docs/developer-manual.md) when creating a
-new concrete workspace. Daily operation is in [docs/manual.md](docs/manual.md).
+The external toolchain is materialized with vcs2l. The shared vcs2l install is
+owned by `brainboxemb/tool.py-dev-env` through the
+`brainboxemb-dev-tools` Conda environment.
 
-The template uses `main` for stable content and `dev` for integration.
-After the one-time empty-repository bootstrap, all source integrations use the
-repository-local `/merge` policy.
+The CAD repository is different from an external dependency: it is the active
+worktree where model branches and edits live. Workspace maintenance may clone it
+when absent, but never pulls, resets, cleans or branch-switches an existing CAD
+checkout.
+
+## First local run
+
+```powershell
+Copy-Item workspace.local.example.yml workspace.local.yml
+# Edit target.model and solidcraft.cli
+.\scripts\bootstrap.ps1
+.\scripts\doctor.ps1
+```
+
+Then open `.generated/forge-cad.code-workspace` and configure the VS Code
+Copilot harness from `.generated/mcp-config.json`.
+
+See [docs/manual.md](docs/manual.md) for daily use and
+[docs/developer-manual.md](docs/developer-manual.md) for workspace maintenance.
+
+This repository uses permanent `main` and `dev` branches. Normal source
+integration uses the repository-local `/merge` policy.

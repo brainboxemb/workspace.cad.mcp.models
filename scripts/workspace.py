@@ -34,10 +34,9 @@ def config() -> dict:
     for key in ("workspace", "environment", "repositories", "solidcraft", "paths"):
         if not isinstance(data.get(key), dict):
             raise WorkspaceError(f"workspace.yml missing mapping: {key}")
-    repos = data["repositories"]
-    for key in ("mcp", "forge", "cad"):
-        if not isinstance(repos.get(key), dict):
-            raise WorkspaceError(f"workspace.yml missing repository: {key}")
+    cad = data["repositories"].get("cad")
+    if not isinstance(cad, dict):
+        raise WorkspaceError("workspace.yml missing repository: cad")
     return data
 
 
@@ -49,18 +48,14 @@ def _path(value: str) -> Path:
     return (ROOT / value).resolve()
 
 
-def repo_paths(data: dict) -> dict[str, Path]:
-    root = _path(data["paths"].get("repositories", ".repos"))
+def workspace_paths(data: dict) -> dict[str, Path]:
+    externals = _path(data["paths"].get("externals", "ext"))
     return {
-        "root": root,
-        "mcp": root / "mcp",
-        "forge": root / "forge",
-        "cad": root / "cad",
+        "mcp": externals / "mcp",
+        "forge": externals / "forge",
+        "cad": _path(data["paths"].get("cad", ".repos/cad")),
+        "generated": _path(data["paths"].get("generated", ".generated")),
     }
-
-
-def generated_path(data: dict) -> Path:
-    return _path(data["paths"].get("generated", ".generated"))
 
 
 def run(args: list[str], *, cwd: Path | None = None, capture: bool = False) -> str:
@@ -105,54 +100,13 @@ def require_repo(path: Path, url: str) -> None:
         raise WorkspaceError(f"unexpected origin for {path.name}: {actual}")
 
 
-def require_clean_toolchain(path: Path) -> None:
-    dirty = git(path, "status", "--porcelain", "--untracked-files=no", capture=True)
-    if dirty:
-        raise WorkspaceError(
-            f"{path.name} has tracked modifications; inspect them instead of overwriting"
-        )
-
-
-def ensure_mcp(data: dict, path: Path) -> None:
-    spec = data["repositories"]["mcp"]
-    url = spec.get("url")
-    commit = spec.get("commit")
-    if not url or not commit:
-        raise WorkspaceError("repositories.mcp requires url and commit")
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        run(["git", "clone", url, str(path)])
-    require_repo(path, url)
-    require_clean_toolchain(path)
-    try:
-        git(path, "cat-file", "-e", f"{commit}^{{commit}}")
-    except WorkspaceError:
-        git(path, "fetch", "origin")
-    git(path, "checkout", "--detach", commit)
-    actual = git(path, "rev-parse", "HEAD", capture=True)
-    if actual != commit:
-        raise WorkspaceError(f"MCP checkout is {actual}, expected {commit}")
-
-
-def ensure_forge(data: dict, path: Path) -> None:
-    spec = data["repositories"]["forge"]
-    url = spec.get("url")
-    commit = spec.get("commit")
-    if not url or not commit:
-        raise WorkspaceError("repositories.forge requires url and commit")
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        run(["git", "clone", url, str(path)])
-    require_repo(path, url)
-    require_clean_toolchain(path)
-    try:
-        git(path, "cat-file", "-e", f"{commit}^{{commit}}")
-    except WorkspaceError:
-        git(path, "fetch", "origin")
-    git(path, "checkout", "--detach", commit)
-    actual = git(path, "rev-parse", "HEAD", capture=True)
-    if actual != commit:
-        raise WorkspaceError(f"Forge checkout is {actual}, expected {commit}")
+def require_external_toolchain(paths: dict[str, Path]) -> None:
+    for name in ("mcp", "forge"):
+        path = paths[name]
+        if not (path / ".git").is_dir():
+            raise WorkspaceError(
+                f"missing external checkout: {path}; run scripts/import-dependencies.ps1"
+            )
 
 
 def ensure_cad(data: dict, path: Path) -> None:
@@ -173,6 +127,7 @@ def ensure_cad(data: dict, path: Path) -> None:
 
 
 def install_toolchain(paths: dict[str, Path]) -> None:
+    require_external_toolchain(paths)
     run([sys.executable, "-m", "pip", "install", "-e", str(paths["mcp"])])
     run([
         sys.executable,
@@ -220,10 +175,10 @@ def solidcraft_cli(local: dict) -> str:
 
 
 def generate(data: dict, local: dict) -> dict:
-    paths = repo_paths(data)
+    paths = workspace_paths(data)
     relative, owner = target_owner(data, local, paths["cad"])
     cli = solidcraft_cli(local)
-    generated = generated_path(data)
+    generated = paths["generated"]
     generated.mkdir(parents=True, exist_ok=True)
 
     command = str(Path(sys.executable).resolve())
@@ -278,10 +233,8 @@ def generate(data: dict, local: dict) -> dict:
 
 def bootstrap() -> None:
     data = config()
-    paths = repo_paths(data)
-    paths["root"].mkdir(parents=True, exist_ok=True)
-    ensure_mcp(data, paths["mcp"])
-    ensure_forge(data, paths["forge"])
+    paths = workspace_paths(data)
+    require_external_toolchain(paths)
     ensure_cad(data, paths["cad"])
     install_toolchain(paths)
     local = local_config(required=False)
@@ -300,9 +253,8 @@ def bootstrap() -> None:
 
 def update() -> None:
     data = config()
-    paths = repo_paths(data)
-    ensure_mcp(data, paths["mcp"])
-    ensure_forge(data, paths["forge"])
+    paths = workspace_paths(data)
+    require_external_toolchain(paths)
     if not paths["cad"].exists():
         ensure_cad(data, paths["cad"])
     else:
@@ -321,7 +273,8 @@ def update() -> None:
 def doctor() -> None:
     data = config()
     local = local_config(required=True)
-    paths = repo_paths(data)
+    paths = workspace_paths(data)
+    require_external_toolchain(paths)
     relative, _ = target_owner(data, local, paths["cad"])
     cli = solidcraft_cli(local)
     run([
@@ -342,7 +295,7 @@ def doctor() -> None:
 
 def select(model: str) -> None:
     data = config()
-    paths = repo_paths(data)
+    paths = workspace_paths(data)
     existing = local_config(required=False)
     if not paths["cad"].is_dir():
         raise WorkspaceError("CAD repository is not bootstrapped yet")
