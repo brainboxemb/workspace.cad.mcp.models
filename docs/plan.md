@@ -43,6 +43,8 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 
 - reuse vcs2l for external repository materialization;
 - keep MCP/Forge release tags exact and committed;
+- materialize MCP/Forge release externals as shallow exact-tag checkouts; full
+  Git history is not part of the local workspace toolchain;
 - keep the active CAD worktree independent from external dependency state;
 - keep model target selection explicit/local;
 - keep normal VS Code context limited to the exact target owner;
@@ -69,11 +71,14 @@ State:
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #41 | workspace `dev` | now | Adopt MCP v0.0.4 / SolidCraft 0.50.0 pins before local acceptance |
+| #44 | workspace `dev` | now | Replace full-history MCP/Forge externals with shallow exact-tag checkouts |
+| #41 | workspace `dev` | complete | MCP v0.0.4 / SolidCraft 0.50.0 baseline published to stable main |
 | #1 | local Windows acceptance | next | Run the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows |
 
 ## Recently completed
 
+- #41 adopts Forge CAD MCP v0.0.4 with Forge/SCPF v0.25.0 and SolidCraft
+  0.50.0 / CAD runtime v0.3.8.
 - #38 synchronizes the standalone workbench, local `project.yml`, MCP
   `v0.0.3` live SolidCraft control and no-CAD-checkout bootstrap from the
   stable workspace template.
