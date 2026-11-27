@@ -63,6 +63,17 @@ Commit only maintained source/metadata/reference changes required by the issue.
 
 If the task is actually to translate a newer independently authored SolidCraft design, stop and use the SolidCraft-to-Forge workflow instead.
 
+## 7. Publish the CAD change
+
+After committing the maintained source change on the issue branch:
+
+~~~powershell
+.\scripts\pr.ps1 publish -Path .repos\cad -Title "<PR title>"
+~~~
+
+The helper waits for PR checks and requests integration by posting `/merge`.
+The CAD repository's merge policy still performs the actual merge.
+
 ## Acceptance
 
 Accepted when the AI understands the existing Forge model, makes a bounded source edit, verifies it and leaves unrelated source and native references unchanged.

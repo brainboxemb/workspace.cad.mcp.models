@@ -278,3 +278,12 @@ def test_local_machine_config_may_exist_without_target():
             "target": {"model": "models/basic/part"},
         }
     )
+
+
+def test_pr_helper_uses_repository_merge_policy():
+    script = (
+        Path(__file__).resolve().parents[1] / "scripts" / "pr.ps1"
+    ).read_text(encoding="utf-8")
+    assert '"pr", "checks", "$PrNumber", "--watch", "--fail-fast"' in script
+    assert '"pr", "comment", "$PrNumber", "--body", "/merge"' in script
+    assert '"pr", "merge"' not in script
