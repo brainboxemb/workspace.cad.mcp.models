@@ -24,9 +24,10 @@ workspace.cad.mcp.models/
     └── state.json
 ```
 
-The external toolchain is materialized with vcs2l. The shared vcs2l install is
-owned by `brainboxemb/tool.py-dev-env` through the
-`brainboxemb-dev-tools` Conda environment.
+The workspace uses one dedicated `cad-mcp-workspace` Conda environment. It
+contains vcs2l, the Forge MCP runtime and the workspace Python dependencies.
+Bootstrap creates or updates it once and all workspace commands use that same
+environment.
 
 The CAD repository is different from an external dependency: it is the active
 worktree where model branches and edits live. Workspace maintenance may clone it

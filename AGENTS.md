@@ -12,7 +12,7 @@ It does not own:
 
 - Forge Python API behavior: `brainboxemb/lib.py.solidcraft.forge`;
 - Forge CAD MCP behavior: `brainboxemb/tool.cad.mcp.forge`;
-- vcs2l/shared developer tooling: `brainboxemb/tool.py-dev-env`;
+- vcs2l upstream behavior;
 - CAD model source: `brainboxemb/2026-011-02.cad.solidcraft`;
 - reusable workspace architecture:
   `brainboxemb/template.cad.mcp.workspace`;
@@ -33,8 +33,9 @@ It does not own:
 ## Dependency boundary
 
 MCP and Forge are externals declared only in `dependencies.repos` and
-materialized by vcs2l below `ext/`. Do not reimplement Git dependency
-management in this repository.
+materialized by vcs2l below `ext/`. vcs2l and the Forge MCP runtime run from
+the same dedicated `cad-mcp-workspace` Conda environment. Do not reimplement
+Git dependency management or introduce a second normal-use environment.
 
 The CAD checkout below `.repos/cad/` is the active worktree. Bootstrap may
 clone it when absent and verify origin when present, but must never pull,

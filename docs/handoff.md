@@ -27,8 +27,7 @@ Repository role:
 - MCP and Forge source are exact externals from dependencies.repos, materialized
   with vcs2l; the CAD catalog is a separate active worktree;
 - reusable workspace behavior belongs in brainboxemb/template.cad.mcp.workspace,
-  vcs2l/shared developer tooling in brainboxemb/tool.py-dev-env, Forge behavior
-  in brainboxemb/lib.py.solidcraft.forge, MCP behavior in
+  Forge behavior in brainboxemb/lib.py.solidcraft.forge, MCP behavior in
   brainboxemb/tool.cad.mcp.forge, and CAD model source in
   brainboxemb/2026-011-02.cad.solidcraft.
 
@@ -50,7 +49,8 @@ Start by:
 Durable working rules:
 
 - MCP/Forge dependency revisions live only in dependencies.repos and are
-  materialized with vcs2l below ext/;
+  materialized with vcs2l below ext/ from the same cad-mcp-workspace Conda
+  environment that runs the MCP;
 - .repos/cad is the user's active CAD worktree and must not be reset, cleaned,
   pulled or branch-switched by workspace maintenance once it exists;
 - the active model owner is explicit local configuration in
