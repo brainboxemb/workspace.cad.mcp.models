@@ -81,7 +81,9 @@ def test_generate_opens_only_exact_target(monkeypatch, tmp_path):
     assert "models/components/part" in args
     assert str((tmp_path / "ext" / "forge").resolve()) in args
     assert not (owner / ".codex").exists()
+    assert not (owner / "AGENTS.md").exists()
     assert state["codex_config"] is None
+    assert state["codex_policy"] is None
 
 
 def test_create_workbench_uses_standalone_mcp_workspace(monkeypatch, tmp_path):
@@ -149,6 +151,17 @@ def test_create_workbench_uses_standalone_mcp_workspace(monkeypatch, tmp_path):
     server = codex["mcp_servers"]["forgeCad"]
     assert server["command"] == str(tmp_path / "python.exe")
     assert server["args"] == args
+
+    policy_path = owner / "AGENTS.md"
+    assert state["codex_policy"] == str(policy_path)
+    policy = policy_path.read_text(encoding="utf-8")
+    assert "forgeCad.skill_reference" in policy
+    assert "forge-modeling" in policy
+    assert "solidcraft-control" in policy
+    assert "solidcraft-to-forge" in policy
+    assert "Do not use shell commands" in policy
+    assert "Do not use GitHub, web search" in policy
+    assert "report that gap instead of bypassing the MCP boundary" in policy
 
 
 def test_create_workbench_refuses_invalid_or_existing_name(monkeypatch, tmp_path):
@@ -504,7 +517,7 @@ def test_toolchain_dependencies_use_qualified_release_tags():
         )
     )["repositories"]
 
-    assert dependencies["mcp"]["version"] == "v0.0.6"
+    assert dependencies["mcp"]["version"] == "v0.0.7"
     assert dependencies["forge"]["version"] == "v0.25.0"
     assert all(
         item["version"].startswith("v")

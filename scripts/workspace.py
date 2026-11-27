@@ -23,6 +23,31 @@ MODEL_SECTIONS = frozenset({"basic", "components", "subassemblies", "assemblies"
 MODEL_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 WORKBENCH_DIR = ".workbench"
 
+WORKBENCH_AGENTS = """# Local Forge CAD workbench
+
+This directory is the only normal authoring workspace for this Codex session.
+
+## Hard boundaries
+
+- Keep model source, generated evidence and normal file operations inside this workbench.
+- Use the `forgeCad` MCP tools for Forge/SolidCraft authoring knowledge and CAD control.
+- Do not use shell commands or direct filesystem reads to inspect `ext/mcp`, `ext/forge`, the parent workspace repository, or other toolchain roots.
+- Do not use GitHub, web search or other network lookup as an implicit fallback for Forge API, Forge examples, SolidCraft commands or release-matched CAD knowledge.
+- GitHub/web/network access is appropriate only when the user explicitly asks for repository work or external research.
+- If required CAD knowledge is missing from `forgeCad`, report that gap instead of bypassing the MCP boundary.
+
+## Skills: read the one for the task
+
+Call `forgeCad.skill_list` when skill availability is unknown. Before task-specific work, load the matching `SKILL.md` with `forgeCad.skill_reference`. Read API docs, examples, guides and command references only through that skill.
+
+| Skill | When |
+| --- | --- |
+| `forge-modeling` | create or modify maintainable Forge Python models |
+| `solidcraft-control` | apply, inspect, mutate, view or render the running SolidCraft design |
+| `solidcraft-to-forge` | understand an existing native SolidCraft design and translate it to Forge Python |
+"""
+
+
 
 def _yaml(path: Path, *, required: bool = True) -> dict:
     if not path.is_file():
@@ -492,6 +517,12 @@ def _toml_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+def write_codex_workbench_policy(owner: Path) -> Path:
+    policy_path = owner / "AGENTS.md"
+    policy_path.write_text(WORKBENCH_AGENTS, encoding="utf-8")
+    return policy_path
+
+
 def write_codex_workbench_config(
     owner: Path,
     command: str,
@@ -544,8 +575,10 @@ def generate(data: dict, local: dict) -> dict:
     )
 
     codex_config = None
+    codex_policy = None
     if binding["kind"] == "workbench":
         codex_config = write_codex_workbench_config(owner, command, args)
+        codex_policy = write_codex_workbench_policy(owner)
 
     code_workspace = {
         "folders": [{"name": binding["name"], "path": str(owner)}],
@@ -572,6 +605,7 @@ def generate(data: dict, local: dict) -> dict:
         "python": command,
         "solidcraft_cli": cli,
         "codex_config": str(codex_config) if codex_config is not None else None,
+        "codex_policy": str(codex_policy) if codex_policy is not None else None,
     }
     (generated / "state.json").write_text(
         json.dumps(state, indent=2) + "\n", encoding="utf-8"
