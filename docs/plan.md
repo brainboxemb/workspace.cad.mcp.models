@@ -67,6 +67,9 @@ State:
 
 ## Recently completed
 
+- #12 synchronized the target-optional installation, new-model owner creation,
+  immutable SolidCraft reference import and ordered model workflows from the
+  workspace template.
 - #8 synchronized the accepted procedural daily manual and rewrote the concrete
   workspace developer manual as an ordered maintenance procedure. Setup now
   states exactly when `bootstrap.ps1` creates/updates
@@ -80,14 +83,14 @@ State:
 
 ## Next release/checkpoint
 
-The first acceptance checkpoint is:
+The first acceptance checkpoint is now an ordered workflow test:
 
-1. `vcs import --input dependencies.repos ext` succeeds;
-2. the CAD catalog is cloned/validated at `.repos/cad`;
-3. the project Conda environment installs MCP/SCPF;
-4. `doctor.ps1` is ready for one exact selected model;
-5. VS Code starts the generated MCP definition;
-6. real `environment` and `skill_list` calls succeed.
+1. basic installation succeeds with no target selected;
+2. create and verify one new Forge model;
+3. convert one independently authored SolidCraft .sc checkpoint to Forge while
+   preserving the original under `reference/`;
+4. continue one existing Forge model from Git;
+5. prove owner-local `build/` scratch never appears as maintained Git source.
 
 After that, record any proven template friction upstream in
 `brainboxemb/template.cad.mcp.workspace`.

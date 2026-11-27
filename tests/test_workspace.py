@@ -127,3 +127,128 @@ def test_environment_contains_vcs2l():
         if isinstance(item, dict) and "pip" in item
     )
     assert "vcs2l==1.1.7" in pip
+
+
+def test_new_model_relative_requires_structured_owner():
+    assert workspace.new_model_relative("models/basic/new-part") == Path(
+        "models/basic/new-part"
+    )
+    with pytest.raises(workspace.WorkspaceError):
+        workspace.new_model_relative("models/new-part")
+    with pytest.raises(workspace.WorkspaceError):
+        workspace.new_model_relative("models/unknown/new-part")
+
+
+def test_create_model_scaffolds_owner_and_selects_it(monkeypatch, tmp_path):
+    data = base_config()
+    cad = tmp_path / ".repos" / "cad"
+    cad.mkdir(parents=True)
+    (cad / ".git").mkdir()
+    (tmp_path / "workspace.local.yml").write_text(
+        "schema: 1\ntarget:\n  model: models/basic/old\nsolidcraft:\n  cli: C:\\\\SolidCraft\\\\solidcraft-cli.exe\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "LOCAL_PATH", tmp_path / "workspace.local.yml")
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace, "require_repo", lambda path, url: None)
+
+    def fake_git(path, *args, capture=False):
+        if args[:2] == ("branch", "--show-current"):
+            return "issue/100-new-part"
+        if args[:2] == ("status", "--porcelain"):
+            return ""
+        raise AssertionError(args)
+
+    monkeypatch.setattr(workspace, "git", fake_git)
+
+    result = workspace.create_model(
+        "models/basic/new-part",
+        "new-part",
+        "New Part",
+        20,
+    )
+
+    owner = cad / "models" / "basic" / "new-part"
+    assert result["model"] == "models/basic/new-part"
+    assert result["source_expected"].endswith("scpf/model.py")
+    assert yaml.safe_load((owner / "ci.yml").read_text(encoding="utf-8")) == {
+        "schema": 1,
+        "id": "new-part",
+        "builder": "forge",
+        "source": "scpf/model.py",
+        "process": True,
+    }
+    model = yaml.safe_load((owner / "model.yml").read_text(encoding="utf-8"))
+    assert model["section"] == "basic"
+    assert model["title"] == "New Part"
+    local = yaml.safe_load(
+        (tmp_path / "workspace.local.yml").read_text(encoding="utf-8")
+    )
+    assert local["target"]["model"] == "models/basic/new-part"
+
+
+def test_create_model_requires_short_lived_clean_cad_branch(monkeypatch, tmp_path):
+    data = base_config()
+    cad = tmp_path / ".repos" / "cad"
+    cad.mkdir(parents=True)
+    (cad / ".git").mkdir()
+
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+    monkeypatch.setattr(workspace, "require_repo", lambda path, url: None)
+    monkeypatch.setattr(
+        workspace,
+        "git",
+        lambda path, *args, capture=False: "dev"
+        if args[:2] == ("branch", "--show-current")
+        else "",
+    )
+
+    with pytest.raises(workspace.WorkspaceError, match="short-lived CAD work branch"):
+        workspace.create_model("models/basic/new-part", "new-part", "New Part")
+
+
+def test_import_reference_is_byte_identical_and_immutable(monkeypatch, tmp_path):
+    data = base_config()
+    cad = tmp_path / ".repos" / "cad"
+    owner = cad / "models" / "components" / "native-part"
+    owner.mkdir(parents=True)
+    (owner / "model.yml").write_text("title: Native Part\n", encoding="utf-8")
+    local = tmp_path / "workspace.local.yml"
+    local.write_text(
+        "schema: 1\ntarget:\n  model: models/components/native-part\nsolidcraft:\n  cli: solidcraft-cli\n",
+        encoding="utf-8",
+    )
+    source = tmp_path / "original.sc"
+    source.write_bytes(b"native-solidcraft-checkpoint")
+
+    monkeypatch.setattr(workspace, "ROOT", tmp_path)
+    monkeypatch.setattr(workspace, "LOCAL_PATH", local)
+    monkeypatch.setattr(workspace, "config", lambda: data)
+
+    first = workspace.import_reference(str(source), "source.sc")
+    target = owner / "reference" / "source.sc"
+    assert first["copied"] is True
+    assert target.read_bytes() == source.read_bytes()
+
+    second = workspace.import_reference(str(source), "source.sc")
+    assert second["copied"] is False
+    assert second["sha256"] == first["sha256"]
+
+    changed = tmp_path / "changed.sc"
+    changed.write_bytes(b"different-checkpoint")
+    with pytest.raises(workspace.WorkspaceError, match="new checkpoint name"):
+        workspace.import_reference(str(changed), "source.sc")
+
+
+def test_local_machine_config_may_exist_without_target():
+    assert not workspace.has_target({})
+    assert not workspace.has_target({"solidcraft": {"cli": "solidcraft-cli"}})
+    assert workspace.has_target(
+        {
+            "solidcraft": {"cli": "solidcraft-cli"},
+            "target": {"model": "models/basic/part"},
+        }
+    )
