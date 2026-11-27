@@ -1,30 +1,20 @@
 schema: 1
 
 workspace:
-  id: template
+  id: models
 
 environment:
   conda_name: cad-mcp-workspace
 
 repositories:
-  mcp:
-    url: https://github.com/brainboxemb/tool.cad.mcp.forge.git
-    version: 0.0.1
-    commit: a51814529763b176cb963f84b10d72e1838cb8bb
-
-  forge:
-    url: https://github.com/brainboxemb/lib.py.solidcraft.forge.git
-    version: 0.19.0
-    commit: ce9cd4439efe51edc360b7bfffb77b950e218d32
-
   cad:
-    # Set this in the concrete workspace repository before bootstrap.
-    url:
+    url: https://github.com/brainboxemb/2026-011-02.cad.solidcraft.git
     branch: dev
 
 solidcraft:
   version: 0.49.0
 
 paths:
-  repositories: .repos
+  externals: ext
+  cad: .repos/cad
   generated: .generated

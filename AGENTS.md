@@ -2,66 +2,56 @@
 
 ## Purpose
 
-This repository is a reusable template for local CAD MCP workspaces. It owns
-workspace/bootstrap behavior only.
+This repository is the concrete Forge CAD MCP assistant workspace for
+`brainboxemb/2026-011-02.cad.solidcraft`.
+
+It owns only workspace configuration and local bootstrap/client-generation
+mechanics.
 
 It does not own:
 
 - Forge Python API behavior: `brainboxemb/lib.py.solidcraft.forge`;
 - Forge CAD MCP behavior: `brainboxemb/tool.cad.mcp.forge`;
-- CAD model source: the concrete CAD-library repository configured by a
-  workspace created from this template;
+- vcs2l/shared developer tooling: `brainboxemb/tool.py-dev-env`;
+- CAD model source: `brainboxemb/2026-011-02.cad.solidcraft`;
+- reusable workspace architecture:
+  `brainboxemb/template.cad.mcp.workspace`;
 - SolidCraft engine behavior.
 
 ## Start work
 
-Before changing the template:
+1. inspect current issues, pull requests and branches;
+2. read `docs/plan.md`;
+3. read `docs/developer-manual.md`;
+4. read `docs/manual.md` for user-visible workflow;
+5. keep handoff/plan structure aligned with
+   `brainboxemb/meta.cad.solidcraft/templates/docs/`;
+6. create a short-lived branch from `dev`;
+7. keep one logical change per issue/branch/PR;
+8. use `/merge` for every integration.
 
-1. read `docs/plan.md`;
-2. read `docs/developer-manual.md`;
-3. read `docs/manual.md` when changing user-visible workflow;
-4. create a short-lived branch from `dev`;
-5. keep one logical change per issue/branch/PR;
-6. run the workspace unit tests.
+## Dependency boundary
+
+MCP and Forge are externals declared only in `dependencies.repos` and
+materialized by vcs2l below `ext/`. Do not reimplement Git dependency
+management in this repository.
+
+The CAD checkout below `.repos/cad/` is the active worktree. Bootstrap may
+clone it when absent and verify origin when present, but must never pull,
+reset, clean or switch an existing CAD checkout.
+
+The exact target model owner is local configuration in
+`workspace.local.yml`. Never add fuzzy target discovery or implicit target
+switching.
 
 ## Branch model
 
-Permanent branches are only `main` and `dev`.
+Permanent branches are `main` and `dev`.
 
-- short-lived branch -> `dev`: squash;
-- `dev` -> `main`: merge commit;
+- short-lived branch -> `dev`: squash through `/merge`;
+- `dev` -> `main`: merge commit through `/merge`;
 - `main` -> `dev`: merge commit only for stable-only content not already on
   dev.
 
-Every integration uses `/merge` and the repository-local merge-policy
-workflow. Never select merge/squash/rebase manually and never use direct GitHub
-merge as fallback.
-
-Merged temporary branches are cleanup candidates. `main` and `dev` never
-are.
-
-## Workspace safety
-
-The template may manage MCP and exact Forge toolchain checkouts. It must not
-reset, force-checkout, clean or otherwise rewrite an existing CAD checkout.
-After initial clone, the CAD repository is the user's real worktree.
-
-The exact target model owner is explicit local configuration. Never implement
-fuzzy model discovery or automatic target switching.
-
-Generated VS Code project context should expose the selected model owner as the
-normal folder. Do not expose the entire managed Forge/MCP/CAD checkout set as
-ordinary assistant browse context.
-
-Nested repositories and generated files stay below ignored `.repos/` and
-`.generated/`.
-
-## Bootstrap behavior
-
-Bootstrap must be idempotent and fail closed on unexpected modifications in
-managed MCP/Forge toolchain checkouts. It may clone the configured CAD
-repository when absent, but must leave an existing CAD checkout's branch and
-working tree untouched.
-
-Do not expose Git clone/update behavior as an MCP model-work tool. Repository
-management is an operator/workspace responsibility.
+Model-development Git work belongs in the CAD repository, not this workspace
+repository.
