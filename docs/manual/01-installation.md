@@ -1,23 +1,72 @@
 # 01 — Basic installation
 
-Use this once on a machine before choosing a model workflow.
+Use this once on a Windows machine before choosing a model workflow.
 
-This step installs the workspace toolchain and clones the CAD catalog. It does not select a model.
+This procedure starts from a machine that may not have Conda installed yet. It
+installs the machine-level Conda distribution, installs the workspace toolchain
+and clones the CAD catalog. It does not select a model.
 
-## 1. Prerequisites
+## 1. Check Git
 
-PowerShell needs Git, Conda, repository access and a working SolidCraft CLI.
+Open PowerShell and run:
+
+~~~powershell
+git --version
+~~~
+
+If Git is not available, install Git for Windows first, open a new PowerShell
+window and repeat the command.
+
+## 2. Install Conda
+
+Check whether Conda is already available:
+
+~~~powershell
+conda --version
+~~~
+
+If that command succeeds, keep the existing Conda installation and continue
+with step 3.
+
+If it does not succeed, install **Miniforge3** for Windows from the official
+conda-forge release:
+
+https://github.com/conda-forge/miniforge/releases/latest
+
+Choose the Windows installer that matches the machine architecture. For the
+normal x86-64 Windows installation this is:
+
+~~~text
+Miniforge3-Windows-x86_64.exe
+~~~
+
+Run the installer with the normal per-user settings.
+
+After installation, open **Miniforge Prompt** once and initialize Conda for
+PowerShell:
+
+~~~powershell
+conda init powershell
+~~~
+
+Close all PowerShell windows and open a new PowerShell window.
 
 Verify:
 
 ~~~powershell
-git --version
 conda --version
 ~~~
 
-Do not create a Conda environment yourself and do not install vcs2l separately.
+Do not create the project environment manually. This step installs Conda on the
+machine only. Later, `bootstrap.ps1` creates the dedicated project environment
+named `cad-mcp-workspace`.
 
-## 2. Clone the concrete workspace
+## 3. Check SolidCraft
+
+Make sure the SolidCraft CLI is installed and note its executable path. You
+will put that path in `workspace.local.yml` in step 5.
+
+## 4. Clone the concrete workspace
 
 For the models workspace:
 
@@ -26,9 +75,12 @@ git clone https://github.com/brainboxemb/workspace.cad.mcp.models.git
 cd workspace.cad.mcp.models
 ~~~
 
-The committed workspace.yml identifies the CAD catalog. Exact MCP and Forge revisions are in dependencies.repos.
+The committed `workspace.yml` identifies the CAD catalog. Exact MCP and Forge
+revisions are in `dependencies.repos`.
 
-## 3. Create local machine configuration
+## 5. Create local machine configuration
+
+Create:
 
 ~~~powershell
 Copy-Item workspace.local.example.yml workspace.local.yml
@@ -40,12 +92,14 @@ Edit only the local SolidCraft CLI path:
 schema: 1
 
 solidcraft:
-  cli: C:\\path\\to\\solidcraft-cli.exe
+  cli: C:\path\to\solidcraft-cli.exe
 ~~~
 
 Do not add a target yet. Target selection belongs to the model workflow.
 
-## 4. Run bootstrap
+## 6. Run bootstrap
+
+Run:
 
 ~~~powershell
 .\scripts\bootstrap.ps1
@@ -53,16 +107,33 @@ Do not add a target yet. Target selection belongs to the model workflow.
 
 On the first run the script:
 
-1. creates cad-mcp-workspace from environment.yml;
-2. installs Python, vcs2l and workspace dependencies there;
-3. runs vcs import --input dependencies.repos ext in the same environment;
-4. materializes exact MCP and Forge checkouts under ext/mcp and ext/forge;
-5. clones the configured CAD repository to .repos/cad when absent;
-6. installs Forge CAD MCP and SCPF into cad-mcp-workspace.
+1. checks whether the project Conda environment `cad-mcp-workspace` exists;
+2. creates it from `environment.yml` when it does not exist;
+3. updates that same environment from `environment.yml` on later bootstrap
+   runs;
+4. installs Python, vcs2l and workspace dependencies in that environment;
+5. runs `vcs import --input dependencies.repos ext` in the same environment;
+6. materializes exact MCP and Forge checkouts under `ext/mcp` and
+   `ext/forge`;
+7. clones the configured CAD repository to `.repos/cad` when absent;
+8. installs Forge CAD MCP and SCPF into `cad-mcp-workspace`.
 
-Because no model is selected, the expected final state is toolchain ready with no target selected. That is successful installation.
+The two Conda levels are therefore:
 
-## 5. Verify the installation
+~~~text
+Miniforge3 / Conda
+    = installed once on the Windows machine
+
+cad-mcp-workspace
+    = project environment created and maintained by bootstrap.ps1
+~~~
+
+Because no model is selected, the expected final state is toolchain ready with
+no target selected. That is successful installation.
+
+## 7. Verify the installation
+
+Verify vcs2l inside the project environment:
 
 ~~~powershell
 conda run --no-capture-output --name cad-mcp-workspace vcs --help
@@ -76,8 +147,9 @@ ext/forge/
 .repos/cad/
 ~~~
 
-Do not run doctor yet. Doctor validates an exact selected model.
+Do not run `doctor.ps1` yet. Doctor validates an exact selected model.
 
-## 6. Continue
+## 8. Continue
 
-For the first acceptance continue with [02 — Create a new Forge model](02-new-model.md).
+For the first acceptance continue with
+[02 — Create a new Forge model](02-new-model.md).
