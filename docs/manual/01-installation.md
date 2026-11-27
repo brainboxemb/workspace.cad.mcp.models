@@ -130,8 +130,9 @@ On the first run the script:
 6. if they already match, keeps them in place; if the committed release tags
    changed, rematerializes only the clean vcs2l-managed externals and then
    validates them again;
-7. materializes exact MCP and Forge checkouts under `ext/mcp` and
-   `ext/forge`;
+7. materializes exact shallow MCP and Forge tag checkouts under `ext/mcp`
+   and `ext/forge`, so workspace externals do not retain unrelated Git
+   history;
 8. installs Forge CAD MCP and SCPF into `cad-mcp-workspace`.
 
 With no target selected, or with a standalone workbench selected, bootstrap
@@ -187,9 +188,10 @@ git pull --ff-only
 ~~~
 
 `update.ps1` updates the same `cad-mcp-workspace` Conda environment,
-reconciles MCP and Forge to the exact release tags in `dependencies.repos`,
-reinstalls the local toolchain packages and regenerates client state when a
-target is selected.
+reconciles MCP and Forge to shallow checkouts of the exact release tags in
+`dependencies.repos`, reinstalls the local toolchain packages and regenerates
+client state when a target is selected. An existing full-history external is
+treated as stale and is safely rematerialized once when it is clean.
 
 Do not manually delete `ext/` to adopt a new MCP or Forge release.
 `.repos/cad/`, when present for catalog work, is the active CAD worktree and
