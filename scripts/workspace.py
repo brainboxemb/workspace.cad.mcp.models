@@ -147,7 +147,14 @@ def ensure_cad(data: dict, path: Path) -> None:
 
 def install_toolchain(paths: dict[str, Path]) -> None:
     require_external_toolchain(paths)
-    run([sys.executable, "-m", "pip", "install", "-e", str(paths["mcp"])])
+    run([
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        str(paths["mcp"]),
+    ])
     run([
         sys.executable,
         "-m",
