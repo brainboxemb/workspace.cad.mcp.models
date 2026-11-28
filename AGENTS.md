@@ -18,7 +18,7 @@ It does not own:
 
 Before changing the template:
 
-1. read `docs/plan.md`;
+1. read the current `main:docs/plan.md` (not a potentially stale dev copy);
 2. read `docs/developer-manual.md`;
 3. read `docs/manual.md` when changing user-visible workflow;
 4. keep `docs/plan.md` and `docs/handoff.md` structurally aligned with
@@ -27,7 +27,8 @@ Before changing the template:
 6. for stable control-doc-only work limited to `docs/plan.md` and/or
    `docs/handoff.md`, create the short-lived branch from `main` instead;
 7. keep one logical change per issue/branch/PR;
-8. run the workspace unit tests.
+8. run the workspace unit tests via `scripts/test.ps1` or the equivalent CI commands.
+9. keep the developer and user manuals aligned with any workflow change; document reviewed consumer adoption separately.
 
 ## Branch model
 

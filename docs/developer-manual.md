@@ -16,13 +16,34 @@ normally be fixed in the template first and then synchronized here.
 
 1. inspect current issues, pull requests and branches;
 2. read `AGENTS.md`;
-3. read `docs/plan.md`;
+3. read the current `main:docs/plan.md`, not a stale dev copy;
 4. create an issue if the change has none;
 5. branch from `dev`;
 6. keep one logical change to one branch and PR.
 
 Do not perform CAD model work in this repository. Model source belongs in
 `.repos/cad/` and in `brainboxemb/2026-011-02.cad.solidcraft`.
+
+## Local VS Code development
+
+Use Git, VS Code with the Python extension, Conda and GitHub CLI. An IDE
+coding assistant is optional; the local workflow does not depend on ChatGPT.
+Open this workspace repository itself when changing scripts and tests, not
+the generated model-only VS Code workspace. Select cad-mcp-workspace as
+Python interpreter. Create/update that environment from environment.yml if
+needed; unit tests do not require a selected CAD target or a SolidCraft GUI.
+
+~~~powershell
+conda env create -f environment.yml # only if the environment does not exist
+conda activate cad-mcp-workspace
+code .
+.\scripts\test.ps1
+~~~
+
+Use conda env update -n cad-mcp-workspace -f environment.yml for an existing
+environment. For debugging, run individual pytest tests in VS Code or the
+activated terminal. Read AGENTS.md before asking an IDE assistant to change
+shared behavior. Fix shared behavior in the template first.
 
 ## Synchronize an accepted template change
 
@@ -31,8 +52,9 @@ reusable behavior that this concrete workspace should adopt.
 
 ### 1. Read the accepted template change
 
-Use the template's stable `main` branch as the source. Identify exactly which
-shared files changed. Typical shared files are `environment.yml`,
+Use the template's stable `main` branch as the source. Record the exact new
+and previously adopted stable template SHAs in the consumer issue. Identify
+exactly which shared files changed. The [template developer manual](https://github.com/brainboxemb/template.cad.mcp.workspace/blob/main/docs/developer-manual.md) owns the general adoption workflow. Typical shared files are `environment.yml`,
 `dependencies.repos`, `scripts/`, `tests/`, `.github/workflows/` and
 `docs/manual.md`.
 
@@ -55,11 +77,28 @@ Do not overwrite these files with template placeholders:
 ### 3. Copy only the intended shared changes
 
 Bring the relevant accepted files from template `main` into the issue branch.
+For example (replace the issue and SHA placeholders):
+
+~~~powershell
+.\scripts\branch.ps1 -Issue 123 -Name adopt-template-change
+git remote add workspace-template https://github.com/brainboxemb/template.cad.mcp.workspace.git
+git fetch workspace-template main
+git diff <previous-template-sha> <new-template-sha> -- scripts tests docs
+git restore --source=<new-template-sha> -- scripts/test.ps1
+~~~
+
+If the remote already exists, verify its URL instead of adding it again.
+Only restore a file that has no consumer-specific changes; apply relevant
+hunks manually to customized files. Review new/deleted paths explicitly.
+Never merge unrelated template history or reset the consumer to template.
+Keep dependency pins unchanged unless an explicit compatibility adoption
+is being made. Preserve local ignored files and the active CAD worktree.
 If the template changes `docs/manual.md`, copy that manual as the shared user
 procedure unless this consumer has a proven local reason to differ.
 
-If commands or file layout change, update this developer manual and the plan in
-the same issue.
+If commands or file layout change, update this developer manual and reconcile
+the canonical plan via a separate main-based control-doc PR; never edit it
+on the dev-based implementation branch.
 
 A basic bootstrap or standalone workbench does not create the CAD checkout.
 When catalog work is selected for the first time, that checkout is intentionally
@@ -85,9 +124,19 @@ gh auth status
 
 If needed, install GitHub CLI and run `gh auth login`.
 
-After the issue-branch changes are committed, the workspace helper can push the
-branch, open the PR, wait for the central checks and request the existing merge
-policy:
+Test and review the issue branch, then stage explicit files and commit:
+
+~~~powershell
+.\scripts\test.ps1
+git diff
+.\scripts\commit.ps1 -Message "Adopt shared changes (#123)" -Files @("scripts/test.ps1")
+.\scripts\pr.ps1 open -Title "Adopt shared changes (#123)" -Body "Refs #123. Template SHA and test evidence: ..."
+.\scripts\pr.ps1 merge
+~~~
+
+The example paths and issue number are placeholders. Review the PR before
+requesting merge. The workspace helper can also combine push, PR and merge
+request into one command:
 
 ~~~powershell
 .\scripts\pr.ps1 publish -Title "Describe the workspace change"
@@ -106,13 +155,18 @@ The steps can also be separated with `pr.ps1 open` and `pr.ps1 merge`.
 
 ### 5. Update the plan
 
-After merge, remove the completed workstream from active work in
-`docs/plan.md` and leave only a short recently-completed note when useful.
+After merge, reconcile the main-owned plan through a main-based control-doc
+PR. Record the adopted template SHA, actual files and any consumer differences
+on the issue. Keep uncompleted live acceptance visible.
 
 ### 6. Publish the accepted dev checkpoint
 
-Create a `dev -> main` PR and use `/merge` again. Do not manually choose
-merge, squash or rebase.
+Create a `dev -> main` PR and use `/merge` again, for example after
+switching to dev and pulling --ff-only: pr.ps1 open -Base main followed by
+pr.ps1 merge. Do not manually choose merge, squash or rebase. After stable
+integration pull consumer main on the operator machine; run update.ps1
+only for changes that affect the installed environment/toolchain or client
+configuration. Docs and local Git helper changes need no reinstall.
 
 ## Change MCP or Forge revisions
 
