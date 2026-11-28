@@ -5,9 +5,10 @@ These procedures are for a concrete workspace such as workspace.cad.mcp.models.
 For the first acceptance, use them in this order:
 
 1. [01 — Basic installation](01-installation.md)
-2. [02 — Create a new Forge model](02-new-model.md)
-3. [03 — Convert a SolidCraft design to Forge](03-solidcraft-to-forge.md)
-4. [04 — Continue an existing Forge model](04-existing-model.md)
+2. [02 — Local MCP workbench](02-local-workbench.md)
+3. [Create a new Forge model](02-new-model.md)
+4. [03 — Convert a SolidCraft design to Forge](03-solidcraft-to-forge.md)
+5. [04 — Continue an existing Forge model](04-existing-model.md)
 
 [05 — Files and artifacts](05-files-and-artifacts.md) defines which files are maintained source, frozen reference, local scratch or generated client state.
 

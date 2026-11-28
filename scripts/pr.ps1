@@ -42,7 +42,7 @@ function Invoke-Gh {
 }
 
 function Current-Pr {
-    $Result = Invoke-Gh -Arguments @("pr", "view", "--json", "number,url") -AllowFailure
+    $Result = Invoke-Gh -Arguments @("pr", "view", "--json", "number,url,state,baseRefName") -AllowFailure
     if ($Result.Code -ne 0) {
         return $null
     }
@@ -80,13 +80,15 @@ function Open-Pr {
         throw "working tree has uncommitted changes; commit or stash them before opening a PR"
     }
 
+    $TargetBase = Resolve-Base -Branch $Branch -ExplicitBase $RequestedBase
     $Existing = Current-Pr
-    if ($null -ne $Existing) {
+    if ($null -ne $Existing -and $Existing.state -eq "OPEN") {
+        if ($Existing.baseRefName -ne $TargetBase) { throw "Existing PR has a different base." }
+        Invoke-Git -Arguments @("push", "--set-upstream", "origin", $Branch) | Out-Null
         Write-Host "PR #$($Existing.number) already exists: $($Existing.url)"
         return [int]$Existing.number
     }
 
-    $TargetBase = Resolve-Base -Branch $Branch -ExplicitBase $RequestedBase
     Invoke-Git -Arguments @("push", "--set-upstream", "origin", $Branch) | Out-Null
 
     $PrTitle = $Title
