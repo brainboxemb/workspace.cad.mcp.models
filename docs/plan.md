@@ -31,6 +31,10 @@ catalog repository.
 
 ## Lane rule
 
+The current main version of this plan is canonical. Plan/handoff-only changes
+use a short-lived main-based control-doc PR through /merge; normal dev work
+must not maintain a separate plan.
+
 Normal workspace-source work starts from `dev` on a short-lived branch.
 
 - short-lived branch -> `dev`: squash through `/merge`;
@@ -59,18 +63,27 @@ CAD model branches remain governed by the CAD repository, not this workspace.
 State:
 
 - owner/lane: local Windows consumer + workspace `dev`;
-- current status: MCP v0.0.9 is released with the Windows stdio compile fix
-  and is being adopted by this concrete workspace before the live demo resumes;
-- next concrete gate: pull/update the real Windows workspace, regenerate the
-  existing `mcp-test` workbench policy and resume the documented
-  60 × 20 × 4 mm / Ø8 live SolidCraft demo;
-- blocker/external work: the live GUI acceptance is the remaining checkpoint.
+- current status: MCP v0.0.9 is adopted on stable main; the operator
+  confirmed standalone live apply, inspection, parameter mutation,
+  view/render and evidence on 2026-11-28;
+- independent authoring remains open because the old skill contained
+  essentially the acceptance geometry;
+- blocker: MCP #113 awaits Forge #639, the release-matched agent knowledge
+  contract. Resume independent authoring, then catalog acceptance.
+
+### WS2 — local development and consumer adoption
+
+#73 / PRs #74 and #75 integrated the reviewed shared changes from template
+stable ad357d3fd686f88a5f88621dcd59435889352703. Seven shared files were
+copied unchanged and the consumer developer manual was adapted. Both PRs
+passed CI; the local Windows operator script acceptance remains outstanding.
+No dependency pins, catalog identity or local target state changed.
 
 ## Open issue assignment
 
 | Issue | Lane/owner | Status | Next action |
 | --- | --- | --- | --- |
-| #70 | workspace `dev` | active | Adopt MCP v0.0.9 stdio compile fix and publish it to stable main |
+| #73 | workspace | Windows acceptance | Verify local test/branch/commit/PR workflow; record any reusable issues upstream |
 | #67 | workspace `main` | complete | MCP v0.0.8 authoring-contract/Hole-semantics patch adopted |
 | #58 | workspace `main` | complete | MCP v0.0.7 new-model skill published to stable main |
 | #56 | workspace `dev` | complete | Standalone Codex MCP boundary and task-to-skill router synchronized |
@@ -79,7 +92,7 @@ State:
 | #47 | workspace `dev` | complete | Project-local Codex MCP config published to stable main |
 | #44 | workspace `dev` | complete | Shallow exact-tag MCP/Forge externals published and proven on Windows |
 | #41 | workspace `dev` | complete | MCP v0.0.4 / SolidCraft 0.50.0 baseline published to stable main |
-| #1 | local Windows acceptance | now | Resume the 60 × 20 × 4 mm / Ø8 live workbench demo on Windows with stable MCP v0.0.9 |
+| #1 | local Windows acceptance | held on Forge/MCP knowledge | Independent authoring, catalog model, conversion, continuation and scratch boundary |
 
 ## Recently completed
 
@@ -130,17 +143,10 @@ State:
 
 ## Next release/checkpoint
 
-The first acceptance checkpoint is now an ordered workflow test:
-
-1. basic installation succeeds with no target and without a CAD checkout;
-2. create the ignored `mcp-test` workbench and local `project.yml`;
-3. create a 60 × 20 × 4 mm plate with one centered Ø8 mm hole through Forge;
-4. apply it to the running SolidCraft GUI, inspect it, change one exposed
-   parameter natively, set a useful view and retrieve a live render;
-5. confirm `build/session.jsonl`, replay evidence and the render stay inside
-   the workbench;
-6. only after that continue with catalog-model, conversion and existing-model
-   acceptance.
-
-After that, record any proven template friction upstream in
-`brainboxemb/template.cad.mcp.workspace`.
+Verify the newly integrated local developer helpers from a Windows checkout.
+The already confirmed standalone MCP execution workflow need not be repeated
+solely for the docs/scripts change. Once the approved Forge knowledge set is
+released and adopted, verify independent authoring, create one maintained
+catalog model, convert an independently authored SolidCraft .sc, continue an
+existing Forge model and confirm scratch evidence stays outside maintained
+source. Record reusable friction in the template repository.
